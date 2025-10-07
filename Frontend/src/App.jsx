@@ -3,6 +3,8 @@ import Navigation from './customers/components/Navigation/Navigation.jsx'
 import HomePage from './customers/pages/HomePage/HomePage.jsx'
 import LoginPage from './customers/pages/Auth/LoginPage/LoginPage.jsx'
 import SignUpPage from './customers/pages/Auth/SignUpPage/SignUpPage.jsx'
+import AboutUs from './customers/pages/AboutUs/AboutUs.jsx'
+import ContactUs from './customers/pages/ContactUs/ContactUs.jsx'
 import './App.css'
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
         </Routes>
       </div>
     </Router>
