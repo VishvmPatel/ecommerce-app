@@ -1,0 +1,14 @@
+.country-selector-container {
+  position: relative;
+  z-index: 10;
+}
+
+.country-selector-dropdown {
+  width: 288px;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  max-height: 384px;
+  overflow-y: auto;
+}
