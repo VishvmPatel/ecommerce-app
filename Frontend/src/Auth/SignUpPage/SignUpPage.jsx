@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../../contexts/AuthContext';
-import authService from '../../../../services/authService';
+import { Link } from 'react-router-dom';
 
 const SignUpPage = () => {
-  const navigate = useNavigate();
-  const { register, loading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -17,7 +13,6 @@ const SignUpPage = () => {
     gender: '',
     agreeToTerms: false,
   });
-  const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -25,91 +20,19 @@ const SignUpPage = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
-    
-    // Clear validation error for this field
-    if (validationErrors[name]) {
-      setValidationErrors({
-        ...validationErrors,
-        [name]: null
-      });
-    }
-    
-    // Clear auth error when user starts typing
-    if (error) {
-      clearError();
-    }
   };
 
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!formData.firstName.trim()) {
-      errors.firstName = 'First name is required';
-    } else if (formData.firstName.trim().length < 2) {
-      errors.firstName = 'First name must be at least 2 characters';
-    }
-    
-    if (!formData.lastName.trim()) {
-      errors.lastName = 'Last name is required';
-    } else if (formData.lastName.trim().length < 2) {
-      errors.lastName = 'Last name must be at least 2 characters';
-    }
-    
-    if (!formData.email) {
-      errors.email = 'Email is required';
-    } else if (!authService.validateEmail(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else {
-      const passwordValidation = authService.validatePassword(formData.password);
-      if (!passwordValidation.isValid) {
-        errors.password = Object.values(passwordValidation.errors).filter(Boolean)[0];
-      }
-    }
-    
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    
-    if (formData.phone && !authService.validatePhone(formData.phone)) {
-      errors.phone = 'Please enter a valid phone number';
-    }
-    
-    if (!formData.agreeToTerms) {
-      errors.agreeToTerms = 'You must agree to the terms and conditions';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
       return;
     }
-    
-    const userData = {
-      firstName: formData.firstName.trim(),
-      lastName: formData.lastName.trim(),
-      email: formData.email.trim(),
-      password: formData.password,
-      phone: formData.phone.trim() || undefined,
-      dateOfBirth: formData.dateOfBirth || undefined,
-      gender: formData.gender || 'not-specified'
-    };
-    
-    const result = await register(userData);
-    
-    if (result.success) {
-      navigate('/');
+    if (!formData.agreeToTerms) {
+      alert('Please agree to the terms and conditions!');
+      return;
     }
+    console.log('Sign up data:', formData);
   };
 
   const handleGoogleSignUp = () => {
@@ -197,22 +120,6 @@ const SignUpPage = () => {
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Error Message */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-800">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -225,14 +132,9 @@ const SignUpPage = () => {
                     required
                     value={formData.firstName}
                     onChange={handleChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                      validationErrors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                     placeholder="First name"
                   />
-                  {validationErrors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.firstName}</p>
-                  )}
                 </div>
                 <div>
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
@@ -245,14 +147,9 @@ const SignUpPage = () => {
                     required
                     value={formData.lastName}
                     onChange={handleChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                      validationErrors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                     placeholder="Last name"
                   />
-                  {validationErrors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.lastName}</p>
-                  )}
                 </div>
               </div>
 
@@ -268,14 +165,9 @@ const SignUpPage = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                    validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                   placeholder="Enter your email"
                 />
-                {validationErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
-                )}
               </div>
 
               <div>
@@ -288,14 +180,9 @@ const SignUpPage = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                    validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                   placeholder="Enter your phone number"
                 />
-                {validationErrors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>
-                )}
               </div>
 
               <div>
@@ -343,14 +230,9 @@ const SignUpPage = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                    validationErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                   placeholder="Create a password"
                 />
-                {validationErrors.password && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
-                )}
               </div>
 
               <div>
@@ -365,14 +247,9 @@ const SignUpPage = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`mt-1 appearance-none block w-full px-3 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200 ${
-                    validationErrors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 sm:text-sm transition-all duration-200"
                   placeholder="Confirm your password"
                 />
-                {validationErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
-                )}
               </div>
 
               <div className="flex items-center">
@@ -383,9 +260,7 @@ const SignUpPage = () => {
                   required
                   checked={formData.agreeToTerms}
                   onChange={handleChange}
-                  className={`h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded ${
-                    validationErrors.agreeToTerms ? 'border-red-300' : ''
-                  }`}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                 />
                 <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-gray-900">
                   I agree to the{' '}
@@ -398,31 +273,13 @@ const SignUpPage = () => {
                   </a>
                 </label>
               </div>
-              {validationErrors.agreeToTerms && (
-                <p className="text-sm text-red-600">{validationErrors.agreeToTerms}</p>
-              )}
 
               <div>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white transition-all duration-200 ${
-                    loading 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500'
-                  }`}
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-200"
                 >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating Account...
-                    </>
-                  ) : (
-                    'Create Account'
-                  )}
+                  Create Account
                 </button>
               </div>
             </form>

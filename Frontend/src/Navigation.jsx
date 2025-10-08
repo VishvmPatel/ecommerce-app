@@ -6,15 +6,10 @@ import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
-  Popover,
-  PopoverButton,
-  PopoverPanel,
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, UserIcon, ChevronDownIcon, HeartIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
+import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, UserIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import CountrySelector from '../CountrySelector/CountrySelector'
 import { useCart } from '../../../contexts/CartContext'
-import { useAuth } from '../../../contexts/AuthContext'
 
 const navigation = {
   categories: [
@@ -53,9 +48,9 @@ const navigation = {
 export default function Navigation() {
   const navigate = useNavigate()
   const { getCartItemsCount } = useCart()
-  const { isAuthenticated, user, logout } = useAuth()
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const profileRef = useRef(null)
 
@@ -78,12 +73,6 @@ export default function Navigation() {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
     }
-  }
-
-  const handleLogout = async () => {
-    await logout()
-    setProfileOpen(false)
-    navigate('/')
   }
 
   return (
@@ -257,7 +246,7 @@ export default function Navigation() {
 
                     {profileOpen && (
                       <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        {!isAuthenticated ? (
+                        {!isLoggedIn ? (
                           <>
                             <Link
                               to="/login"
@@ -284,54 +273,46 @@ export default function Navigation() {
                         ) : (
                           <>
                             <div className="px-4 py-2 border-b border-gray-200">
-                              <p className="text-sm font-medium text-gray-900">
-                                Welcome back!
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {user?.firstName} {user?.lastName}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {user?.email}
-                              </p>
+                              <p className="text-sm font-medium text-gray-900">John Doe</p>
+                              <p className="text-xs text-gray-500">john.doe@example.com</p>
                             </div>
                             <Link
                               to="/profile"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
                               onClick={() => setProfileOpen(false)}
                             >
-                              <UserIcon className="size-4 mr-3" />
                               My Profile
                             </Link>
                             <Link
                               to="/orders"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
                               onClick={() => setProfileOpen(false)}
                             >
-                              <ClipboardDocumentListIcon className="size-4 mr-3" />
                               My Orders
                             </Link>
                             <Link
                               to="/addresses"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
                               onClick={() => setProfileOpen(false)}
                             >
-                              <UserIcon className="size-4 mr-3" />
                               My Addresses
                             </Link>
                             <Link
                               to="/wishlist"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
                               onClick={() => setProfileOpen(false)}
                             >
-                              <HeartIcon className="size-4 mr-3" />
-                              My Wishlist
+                              Wishlist
                             </Link>
                             <div className="border-t border-gray-200 my-2"></div>
                             <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
                               Help & Support
                             </a>
                             <button
-                              onClick={handleLogout}
+                              onClick={() => {
+                                setIsLoggedIn(false)
+                                setProfileOpen(false)
+                              }}
                               className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
                             >
                               Sign Out

@@ -4,6 +4,12 @@ Frontend/dist/
 Frontend/dist-ssr/
 Frontend/.vite/
 
+# Frontend build and dependencies
+Frontend/node_modules/
+Frontend/dist/
+Frontend/dist-ssr/
+Frontend/.vite/
+
 # Environment files
 .env
 .env.local
