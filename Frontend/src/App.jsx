@@ -20,6 +20,7 @@ import Collections from './customers/pages/Collections/Collections.jsx'
 import CartPage from './customers/pages/CartPage/CartPage.jsx'
 import WishlistPage from './customers/pages/WishlistPage/WishlistPage.jsx'
 import ProfilePage from './customers/pages/ProfilePage/ProfilePage.jsx'
+import MyAddresses from './customers/pages/MyAddresses/MyAddresses.jsx'
 import './App.css'
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/addresses" element={<MyAddresses />} />
               </Routes>
             </div>
           </Router>

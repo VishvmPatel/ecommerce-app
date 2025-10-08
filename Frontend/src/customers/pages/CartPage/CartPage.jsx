@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../../contexts/CartContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import AddressSelection from '../../components/AddressSelection/AddressSelection';
 import { 
   ShoppingBagIcon, 
   TrashIcon, 
@@ -25,8 +27,9 @@ const CartPage = () => {
     getCartGrandTotal,
     getCartItemsCount
   } = useCart();
-
+  const { user } = useAuth();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   const handleQuantityChange = (cartItemId, newQuantity) => {
     if (newQuantity < 1) {
@@ -37,10 +40,15 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
+    if (!selectedAddress) {
+      alert('Please select a delivery address');
+      return;
+    }
+    
     setIsCheckingOut(true);
     // Simulate checkout process
     setTimeout(() => {
-      alert('Order placed successfully! Redirecting to order confirmation...');
+      alert(`Order placed successfully! Will be delivered to:\n${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}`);
       clearCart();
       setIsCheckingOut(false);
     }, 2000);
@@ -203,6 +211,17 @@ const CartPage = () => {
             </div>
           </div>
 
+          {/* Address Selection */}
+          <div className="lg:col-span-2 mb-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <AddressSelection
+                selectedAddress={selectedAddress}
+                onAddressSelect={setSelectedAddress}
+                showAddNew={true}
+              />
+            </div>
+          </div>
+
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
@@ -257,13 +276,24 @@ const CartPage = () => {
               {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                disabled={isCheckingOut}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                disabled={isCheckingOut || !selectedAddress}
+                className={`w-full py-4 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center ${
+                  !selectedAddress
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : isCheckingOut
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                }`}
               >
                 {isCheckingOut ? (
                   <>
                     <ArrowPathIcon className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
+                  </>
+                ) : !selectedAddress ? (
+                  <>
+                    <CreditCardIcon className="w-5 h-5 mr-2" />
+                    Select Address to Checkout
                   </>
                 ) : (
                   <>

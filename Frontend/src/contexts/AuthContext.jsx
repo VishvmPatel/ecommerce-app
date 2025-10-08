@@ -80,6 +80,12 @@ const authReducer = (state, action) => {
         error: null
       };
 
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: action.payload
+      };
+
     case 'SET_LOADING':
       return {
         ...state,
@@ -222,6 +228,13 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  const updateUser = (updatedUser) => {
+    dispatch({
+      type: 'UPDATE_USER',
+      payload: updatedUser
+    });
+  };
+
   const value = {
     ...state,
     login,
@@ -229,7 +242,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     changePassword,
-    clearError
+    clearError,
+    updateUser
   };
 
   return (
