@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../../contexts/CartContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import AddressSelection from '../../components/AddressSelection/AddressSelection';
+import apiService from '../../../services/api';
 import { 
   ShoppingBagIcon, 
   TrashIcon, 
@@ -15,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const { 
     items, 
     removeFromCart, 
@@ -39,19 +41,72 @@ const CartPage = () => {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!selectedAddress) {
       alert('Please select a delivery address');
       return;
     }
     
+    if (!user) {
+      alert('Please log in to place an order');
+      navigate('/login');
+      return;
+    }
+    
     setIsCheckingOut(true);
-    // Simulate checkout process
-    setTimeout(() => {
-      alert(`Order placed successfully! Will be delivered to:\n${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}`);
-      clearCart();
+    
+    try {
+      const orderData = {
+        items: items.map(item => ({
+          product: item.id,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          price: item.price,
+          originalPrice: item.originalPrice
+        })),
+        shippingAddress: {
+          type: selectedAddress.type,
+          street: selectedAddress.street,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          postalCode: selectedAddress.postalCode,
+          country: selectedAddress.country,
+          phone: selectedAddress.phone
+        },
+        billingAddress: {
+          type: selectedAddress.type,
+          street: selectedAddress.street,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          postalCode: selectedAddress.postalCode,
+          country: selectedAddress.country,
+          phone: selectedAddress.phone
+        },
+        payment: {
+          method: 'cod' // Default to Cash on Delivery for now
+        }
+      };
+
+      const response = await apiService.createOrder(orderData);
+      
+      if (response.success) {
+        clearCart();
+        navigate('/orders', { 
+          state: { 
+            message: 'Order placed successfully!',
+            orderNumber: response.data.orderNumber 
+          }
+        });
+      } else {
+        alert('Failed to place order. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Error placing order. Please try again.');
+    } finally {
       setIsCheckingOut(false);
-    }, 2000);
+    }
   };
 
   if (items.length === 0) {

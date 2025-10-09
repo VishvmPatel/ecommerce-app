@@ -5,7 +5,6 @@ const CartContext = createContext();
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART':
-      // Create unique identifier that includes size and color
       const cartItemId = `${action.payload.id}_${action.payload.size || 'default'}_${action.payload.color || 'default'}`;
       
       const existingItem = state.items.find(item => item.cartItemId === cartItemId);
@@ -69,7 +68,6 @@ const initialState = {
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
@@ -82,7 +80,6 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(state.items));
   }, [state.items]);

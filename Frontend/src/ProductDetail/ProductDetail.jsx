@@ -243,7 +243,6 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // Add multiple quantities to cart
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product._id || product.id,

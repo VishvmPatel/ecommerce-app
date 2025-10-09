@@ -1,8 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
 
 const MainCarousel = () => {
+  const navigate = useNavigate();
+
+  const handleShopNow = () => {
+    navigate('/all-products');
+  };
+
+  const handleExploreSale = () => {
+    navigate('/sale');
+  };
+
+  const handleViewCollection = () => {
+    navigate('/collections');
+  };
+
   const items = [
     <div className="item" data-value="1">
       <div className="relative h-96 overflow-hidden">
@@ -15,7 +30,10 @@ const MainCarousel = () => {
           <div className="text-center text-white">
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-pink-200 to-purple-200 bg-clip-text text-transparent">New Fashion Collection</h2>
             <p className="text-xl mb-6 text-gray-200">Discover the latest trends and styles</p>
-            <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 hover:scale-105 shadow-lg">
+            <button 
+              onClick={handleShopNow}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 hover:scale-105 shadow-lg"
+            >
               Shop Now
             </button>
           </div>
@@ -34,7 +52,10 @@ const MainCarousel = () => {
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-pink-100 to-purple-100 bg-clip-text text-transparent">Summer Sale</h2>
             <p className="text-xl mb-2 text-yellow-200 font-semibold">Up to 50% OFF</p>
             <p className="text-lg mb-6 text-gray-200">On all summer collections</p>
-            <button className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-600 transition-all duration-300 hover:scale-105 shadow-lg">
+            <button 
+              onClick={handleExploreSale}
+              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-600 transition-all duration-300 hover:scale-105 shadow-lg"
+            >
               Explore Sale
             </button>
           </div>
@@ -52,7 +73,10 @@ const MainCarousel = () => {
           <div className="text-center text-white">
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">Luxury Fashion</h2>
             <p className="text-xl mb-6 text-gray-300">Premium quality meets elegant design</p>
-            <button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:scale-105 shadow-lg">
+            <button 
+              onClick={handleViewCollection}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:scale-105 shadow-lg"
+            >
               View Collection
             </button>
           </div>

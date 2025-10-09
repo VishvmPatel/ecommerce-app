@@ -24,14 +24,19 @@ const navigation = {
       href: '/new-arrivals',
     },
     {
-      id: 'women',
-      name: 'Women',
-      href: '/women',
+      id: 'casual-wear',
+      name: 'Casual Wear',
+      href: '/category/casual-wear',
     },
     {
-      id: 'men',
-      name: 'Men', 
-      href: '/men',
+      id: 'formal-wear',
+      name: 'Formal Wear', 
+      href: '/category/formal-wear',
+    },
+    {
+      id: 'ethnic-wear',
+      name: 'Ethnic Wear',
+      href: '/category/ethnic-wear',
     },
     {
       id: 'accessories',
@@ -277,9 +282,9 @@ export default function Navigation() {
                             <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
                               Track Order
                             </a>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                            <Link to="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
                               Help & Support
-                            </a>
+                            </Link>
                           </>
                         ) : (
                           <>
@@ -327,9 +332,9 @@ export default function Navigation() {
                               My Wishlist
                             </Link>
                             <div className="border-t border-gray-200 my-2"></div>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                            <Link to="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
                               Help & Support
-                            </a>
+                            </Link>
                             <button
                               onClick={handleLogout}
                               className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"

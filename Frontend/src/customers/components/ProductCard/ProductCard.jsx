@@ -4,6 +4,7 @@ import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useWishlist } from '../../../contexts/WishlistContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import ProductReviewStats from '../ProductReviewStats/ProductReviewStats';
 
 const ProductCard = ({ product }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -16,7 +17,6 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      // Redirect to login if not authenticated
       window.location.href = '/login';
       return;
     }
@@ -130,11 +130,8 @@ const ProductCard = ({ product }) => {
           </h3>
         </Link>
 
-        <div className="flex items-center mb-2">
-          <div className="flex items-center">
-            {renderStars(product.rating || product.averageRating || 0)}
-          </div>
-          <span className="text-xs text-gray-500 ml-2">({product.reviewCount || product.reviews || 0})</span>
+        <div className="mb-2">
+          <ProductReviewStats productId={product._id || product.id} compact={true} />
         </div>
 
         <div className="flex items-center justify-between">

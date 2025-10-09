@@ -2,10 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const { body, validationResult } = require('express-validator');
+const socketService = require('../services/socketService');
 
-// @route   GET /api/products
-// @desc    Get all products with filtering and pagination
-// @access  Public
 router.get('/', async (req, res) => {
   try {
     const {
@@ -26,40 +24,45 @@ router.get('/', async (req, res) => {
       inStock
     } = req.query;
 
-    // Build filter object
     const filter = {};
 
     if (category) filter.category = category;
     if (subcategory) filter.subcategory = subcategory;
     if (brand) filter.brand = brand;
-    if (gender) filter.gender = gender;
+    
+    if (gender) {
+      const genderMap = {
+        'Men': ['Men', 'men'],
+        'Women': ['Women', 'women'],
+        'Kids': ['Kids', 'kids', 'children'],
+        'Unisex': ['Unisex', 'unisex']
+      };
+      
+      const normalizedGender = genderMap[gender] || [gender];
+      filter.gender = { $in: normalizedGender };
+    }
     if (isNew !== undefined) filter.isNew = isNew === 'true';
     if (isFeatured !== undefined) filter.isFeatured = isFeatured === 'true';
     if (inStock !== undefined) filter.inStock = inStock === 'true';
 
-    // Price range filter
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = parseFloat(minPrice);
       if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
 
-    // Size filter
     if (size) {
       filter.sizes = { $in: [size] };
     }
 
-    // Color filter
     if (color) {
       filter.colors = { $in: [color] };
     }
 
-    // Search filter
     if (search) {
       filter.$text = { $search: search };
     }
 
-    // Build sort object
     let sort = {};
     switch (sortBy) {
       case 'price-low-high':
@@ -80,10 +83,8 @@ router.get('/', async (req, res) => {
         break;
     }
 
-    // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Execute query
     const products = await Product.find(filter)
       .sort(sort)
       .skip(skip)
@@ -115,9 +116,23 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/:id
-// @desc    Get single product by ID
-// @access  Public
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Product.distinct('category');
+    res.json({
+      success: true,
+      data: categories
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching categories',
+      error: error.message
+    });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -144,9 +159,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/category/:category
-// @desc    Get products by category
-// @access  Public
 router.get('/category/:category', async (req, res) => {
   try {
     const { category } = req.params;
@@ -170,15 +182,11 @@ router.get('/category/:category', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/search/:query
-// @desc    Search products
-// @access  Public
 router.get('/search/:query', async (req, res) => {
   try {
     const { query } = req.params;
     const { limit = 12 } = req.query;
 
-    // Use regex search for more precise matching
     const products = await Product.find({
       $or: [
         { name: { $regex: query, $options: 'i' } },
@@ -190,6 +198,8 @@ router.get('/search/:query', async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
+
+    socketService.emitSearchActivity(query, products.length);
 
     res.json({
       success: true,
@@ -205,9 +215,6 @@ router.get('/search/:query', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/sale/items
-// @desc    Get products on sale
-// @access  Public
 router.get('/sale/items', async (req, res) => {
   try {
     const { limit = 12 } = req.query;
@@ -233,9 +240,6 @@ router.get('/sale/items', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/featured/items
-// @desc    Get featured products
-// @access  Public
 router.get('/featured/items', async (req, res) => {
   try {
     const { limit = 8 } = req.query;
@@ -258,9 +262,6 @@ router.get('/featured/items', async (req, res) => {
   }
 });
 
-// @route   GET /api/products/new/items
-// @desc    Get new products
-// @access  Public
 router.get('/new/items', async (req, res) => {
   try {
     const { limit = 8 } = req.query;
@@ -283,9 +284,6 @@ router.get('/new/items', async (req, res) => {
   }
 });
 
-// @route   POST /api/products/:id/reviews
-// @desc    Add review to product
-// @access  Private (requires authentication)
 router.post('/:id/reviews', [
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('comment').optional().isLength({ max: 500 }).withMessage('Comment cannot exceed 500 characters')
@@ -303,7 +301,6 @@ router.post('/:id/reviews', [
     const { rating, comment } = req.body;
     const productId = req.params.id;
 
-    // In a real app, you'd get user ID from JWT token
     const userId = req.user?.id || 'guest';
 
     const product = await Product.findById(productId);
@@ -314,14 +311,12 @@ router.post('/:id/reviews', [
       });
     }
 
-    // Add review
     product.reviews.push({
       user: userId,
       rating,
       comment
     });
 
-    // Recalculate average rating
     const totalRating = product.reviews.reduce((sum, review) => sum + review.rating, 0);
     product.rating = totalRating / product.reviews.length;
 
@@ -342,9 +337,6 @@ router.post('/:id/reviews', [
   }
 });
 
-// @route   GET /api/products/filters/options
-// @desc    Get filter options (categories, brands, etc.)
-// @access  Public
 router.get('/filters/options', async (req, res) => {
   try {
     const categories = await Product.distinct('category');
@@ -354,7 +346,6 @@ router.get('/filters/options', async (req, res) => {
     const sizes = await Product.distinct('sizes');
     const colors = await Product.distinct('colors');
 
-    // Get price range
     const priceStats = await Product.aggregate([
       {
         $group: {

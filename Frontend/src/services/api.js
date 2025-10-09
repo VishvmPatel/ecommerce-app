@@ -1,14 +1,25 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
 class ApiService {
-  // Generic fetch method
+  getAuthToken() {
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  }
+
   async fetchData(endpoint, options = {}) {
     try {
+      const token = this.getAuthToken();
+      
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
+        headers,
         ...options
       });
 
@@ -24,7 +35,6 @@ class ApiService {
     }
   }
 
-  // Product APIs
   async getProducts(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.fetchData(`/products${queryString ? `?${queryString}` : ''}`);
@@ -69,7 +79,6 @@ class ApiService {
     });
   }
 
-  // User APIs
   async registerUser(userData) {
     return this.fetchData('/users/register', {
       method: 'POST',
@@ -120,50 +129,87 @@ class ApiService {
     });
   }
 
-  // Order APIs
-  async createOrder(orderData, token) {
+  async createOrder(orderData) {
     return this.fetchData('/orders', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
       body: JSON.stringify(orderData)
     });
   }
 
-  async getUserOrders(token, params = {}) {
+  async getOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.fetchData(`/orders${queryString ? `?${queryString}` : ''}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    return this.fetchData(`/orders${queryString ? `?${queryString}` : ''}`);
   }
 
-  async getOrder(orderId, token) {
-    return this.fetchData(`/orders/${orderId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  async getOrder(orderId) {
+    return this.fetchData(`/orders/${orderId}`);
   }
 
-  async cancelOrder(orderId, reason, token) {
+  async cancelOrder(orderId, reason) {
     return this.fetchData(`/orders/${orderId}/cancel`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
       body: JSON.stringify({ reason })
     });
   }
 
-  // Health check
+  async getAddresses() {
+    return this.fetchData('/addresses');
+  }
+
+  async addAddress(addressData) {
+    return this.fetchData('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData)
+    });
+  }
+
+  async updateAddress(addressId, addressData) {
+    return this.fetchData(`/addresses/${addressId}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData)
+    });
+  }
+
+  async deleteAddress(addressId) {
+    return this.fetchData(`/addresses/${addressId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async setDefaultAddress(addressId) {
+    return this.fetchData(`/addresses/${addressId}/default`, {
+      method: 'PUT'
+    });
+  }
+
+  async get(endpoint, options = {}) {
+    return this.fetchData(endpoint, { method: 'GET', ...options });
+  }
+
+  async post(endpoint, data, options = {}) {
+    return this.fetchData(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      ...options
+    });
+  }
+
+  async put(endpoint, data, options = {}) {
+    return this.fetchData(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      ...options
+    });
+  }
+
+  async delete(endpoint, options = {}) {
+    return this.fetchData(endpoint, { method: 'DELETE', ...options });
+  }
+
   async healthCheck() {
     return this.fetchData('/health');
   }
 }
 
-// Create and export a singleton instance
 const apiService = new ApiService();
 export default apiService;

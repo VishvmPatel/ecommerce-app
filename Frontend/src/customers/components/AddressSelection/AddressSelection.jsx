@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import apiService from '../../../services/api';
 import { 
   MapPinIcon,
   HomeIcon,
@@ -10,7 +11,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 const AddressSelection = ({ selectedAddress, onAddressSelect, showAddNew = true }) => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     type: 'home',
@@ -19,8 +22,30 @@ const AddressSelection = ({ selectedAddress, onAddressSelect, showAddNew = true 
     state: '',
     postalCode: '',
     country: 'India',
+    phone: '',
     isDefault: false
   });
+
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getAddresses();
+      if (response.success) {
+        setAddresses(response.data);
+        if (updateUser) {
+          updateUser({ ...user, addresses: response.data });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -33,35 +58,34 @@ const AddressSelection = ({ selectedAddress, onAddressSelect, showAddNew = true 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const newAddress = {
-      ...formData,
-      id: Date.now().toString()
-    };
-
-    // Update user addresses
-    const updatedAddresses = [...(user.addresses || []), newAddress];
-    
-    // If this is set as default, unset all other defaults
-    if (newAddress.isDefault) {
-      updatedAddresses.forEach(addr => {
-        addr.isDefault = addr.id === newAddress.id;
-      });
+    try {
+      const response = await apiService.addAddress(formData);
+      
+      if (response.success) {
+        await fetchAddresses();
+        
+        setShowAddForm(false);
+        setFormData({
+          type: 'home',
+          street: '',
+          city: '',
+          state: '',
+          postalCode: '',
+          country: 'India',
+          phone: '',
+          isDefault: false
+        });
+        
+        if (addresses.length === 0) {
+          onAddressSelect(response.data);
+        }
+      } else {
+        alert('Failed to add address. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding address:', error);
+      alert('Error adding address. Please try again.');
     }
-
-    // Update user context
-    const updatedUser = { ...user, addresses: updatedAddresses };
-    // Note: In a real app, you'd call an API to save this
-    
-    setShowAddForm(false);
-    setFormData({
-      type: 'home',
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: 'India',
-      isDefault: false
-    });
   };
 
   const getAddressIcon = (type) => {
@@ -86,7 +110,17 @@ const AddressSelection = ({ selectedAddress, onAddressSelect, showAddNew = true 
     }
   };
 
-  const addresses = user?.addresses || [];
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Delivery Address</h3>
+        <div className="bg-gray-50 rounded-lg p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading addresses...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -260,6 +294,20 @@ const AddressSelection = ({ selectedAddress, onAddressSelect, showAddNew = true 
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   placeholder="Enter country"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter phone number"
                 />
               </div>
             </div>

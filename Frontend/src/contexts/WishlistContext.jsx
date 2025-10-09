@@ -63,7 +63,6 @@ export const WishlistProvider = ({ children }) => {
   const [state, dispatch] = useReducer(wishlistReducer, initialState);
   const { isAuthenticated, user } = useAuth();
 
-  // Load wishlist when user logs in
   useEffect(() => {
     if (isAuthenticated && user) {
       loadWishlist();
@@ -76,8 +75,6 @@ export const WishlistProvider = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // For now, we'll use localStorage as a fallback
-      // In a real app, this would make an API call
       const savedWishlist = localStorage.getItem(`wishlist_${user.id}`);
       if (savedWishlist) {
         const wishlist = JSON.parse(savedWishlist);
@@ -117,7 +114,6 @@ export const WishlistProvider = ({ children }) => {
 
       dispatch({ type: 'ADD_TO_WISHLIST', payload: wishlistItem });
 
-      // Save to localStorage
       const updatedWishlist = [...state.wishlist, wishlistItem];
       localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
 
@@ -137,7 +133,6 @@ export const WishlistProvider = ({ children }) => {
 
       dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: productId });
 
-      // Update localStorage
       const updatedWishlist = state.wishlist.filter(item => item._id !== productId);
       localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
 

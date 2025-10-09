@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     unique: true,
-    required: true
+    required: false
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -167,7 +167,6 @@ const orderSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for order status display
 orderSchema.virtual('statusDisplay').get(function() {
   const statusMap = {
     'pending': 'Order Placed',
@@ -181,15 +180,13 @@ orderSchema.virtual('statusDisplay').get(function() {
   return statusMap[this.status] || this.status;
 });
 
-// Index for better query performance
 orderSchema.index({ user: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ 'payment.status': 1 });
 
-// Pre-save middleware to generate order number
 orderSchema.pre('save', function(next) {
-  if (!this.orderNumber) {
+  if (!this.orderNumber || this.orderNumber === '') {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substr(2, 5).toUpperCase();
     this.orderNumber = `FS${timestamp.slice(-6)}${random}`;
@@ -197,7 +194,6 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-save middleware to add timeline entry
 orderSchema.pre('save', function(next) {
   if (this.isModified('status')) {
     this.timeline.push({

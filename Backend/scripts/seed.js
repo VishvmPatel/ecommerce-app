@@ -3,7 +3,6 @@ const Product = require('../models/Product');
 require('dotenv').config();
 
 const products = [
-  // Women's Products
   {
     name: "Trendy Crop Top & High-Waist Jeans Set",
     description: "A stylish combination of a trendy crop top and high-waist jeans perfect for casual outings. Made from premium cotton blend for comfort and style.",
@@ -89,7 +88,6 @@ const products = [
     careInstructions: "Dry clean recommended. Hand wash in cold water if needed."
   },
 
-  // Men's Products
   {
     name: "Premium Cotton Kurta",
     description: "A comfortable and stylish cotton kurta perfect for traditional occasions. Features intricate embroidery and premium cotton fabric.",
@@ -147,7 +145,6 @@ const products = [
     careInstructions: "Machine wash in cold water. Turn inside out. Air dry."
   },
 
-  // Children's Products
   {
     name: "Cute Kids T-Shirt Set",
     description: "Comfortable and colorful t-shirt set for kids. Made from soft cotton fabric that's gentle on children's skin.",
@@ -177,7 +174,6 @@ const products = [
     careInstructions: "Machine wash in cold water. Use mild detergent. Air dry."
   },
 
-  // Accessories
   {
     name: "Designer Sunglasses - Aviator Style",
     description: "Stylish aviator-style sunglasses with UV protection. Perfect for sunny days and outdoor activities.",
@@ -236,15 +232,12 @@ const products = [
 
 const seedDatabase = async () => {
   try {
-    // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    // Clear existing products
     await Product.deleteMany({});
     console.log('🗑️ Cleared existing products');
 
-    // Insert new products
     const insertedProducts = await Product.insertMany(products);
     console.log(`✅ Inserted ${insertedProducts.length} products`);
 
@@ -256,5 +249,4 @@ const seedDatabase = async () => {
   }
 };
 
-// Run the seed function
 seedDatabase();

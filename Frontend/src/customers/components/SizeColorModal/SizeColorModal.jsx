@@ -26,7 +26,6 @@ const SizeColorModal = ({
       quantity
     });
     
-    // Reset form
     setSelectedSize('');
     setSelectedColor('');
     setQuantity(1);

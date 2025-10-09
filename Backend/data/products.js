@@ -1,5 +1,4 @@
 const products = [
-  // Women's Products
   {
     _id: "women_1",
     name: "Trendy Crop Top & High-Waist Jeans Set",
@@ -81,7 +80,6 @@ const products = [
     dateAdded: '2024-01-14'
   },
 
-  // Men's Products
   {
     _id: "men_1",
     name: "Premium Cotton Kurta",
@@ -125,7 +123,6 @@ const products = [
     dateAdded: '2024-01-15'
   },
 
-  // Accessories
   {
     _id: "accessories_1",
     name: "Designer Sunglasses - Aviator Style",

@@ -3,11 +3,11 @@ const router = express.Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { body, validationResult } = require('express-validator');
+const socketService = require('../services/socketService');
+const auth = require('../middleware/auth');
 
-// @route   POST /api/orders
-// @desc    Create a new order
-// @access  Private
 router.post('/', [
+  auth,
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
   body('shippingAddress').isObject().withMessage('Shipping address is required'),
   body('payment.method').isIn(['credit_card', 'debit_card', 'upi', 'net_banking', 'cod', 'wallet']).withMessage('Invalid payment method')
@@ -33,7 +33,6 @@ router.post('/', [
 
     const { items, shippingAddress, billingAddress, payment } = req.body;
 
-    // Validate products and calculate pricing
     let subtotal = 0;
     const validatedItems = [];
 
@@ -73,16 +72,12 @@ router.post('/', [
       });
     }
 
-    // Calculate shipping (free for orders over ₹2000)
     const shipping = subtotal >= 2000 ? 0 : 100;
 
-    // Calculate tax (18% GST)
     const tax = subtotal * 0.18;
 
-    // Calculate total
     const total = subtotal + shipping + tax;
 
-    // Create order
     const order = new Order({
       user: userId,
       items: validatedItems,
@@ -102,12 +97,17 @@ router.post('/', [
 
     await order.save();
 
-    // Update product stock
     for (const item of validatedItems) {
       await Product.findByIdAndUpdate(
         item.product,
         { $inc: { stockQuantity: -item.quantity } }
       );
+    }
+
+    try {
+      socketService.emitNewOrder(order);
+    } catch (socketError) {
+      console.error('Socket service error:', socketError);
     }
 
     res.status(201).json({
@@ -125,10 +125,7 @@ router.post('/', [
   }
 });
 
-// @route   GET /api/orders
-// @desc    Get user's orders
-// @access  Private
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const userId = req.user?.id;
     
@@ -176,10 +173,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   GET /api/orders/:id
-// @desc    Get single order by ID
-// @access  Private
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { id } = req.params;
@@ -216,10 +210,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   PUT /api/orders/:id/cancel
-// @desc    Cancel an order
-// @access  Private
-router.put('/:id/cancel', async (req, res) => {
+router.put('/:id/cancel', auth, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { id } = req.params;
@@ -241,7 +232,6 @@ router.put('/:id/cancel', async (req, res) => {
       });
     }
 
-    // Check if order can be cancelled
     if (['shipped', 'delivered', 'cancelled'].includes(order.status)) {
       return res.status(400).json({
         success: false,
@@ -249,18 +239,18 @@ router.put('/:id/cancel', async (req, res) => {
       });
     }
 
-    // Update order status
     order.status = 'cancelled';
     order.notes.customer = reason || 'Cancelled by customer';
     await order.save();
 
-    // Restore product stock
     for (const item of order.items) {
       await Product.findByIdAndUpdate(
         item.product,
         { $inc: { stockQuantity: item.quantity } }
       );
     }
+
+    socketService.emitOrderUpdate(order);
 
     res.json({
       success: true,
@@ -277,9 +267,6 @@ router.put('/:id/cancel', async (req, res) => {
   }
 });
 
-// @route   PUT /api/orders/:id/tracking
-// @desc    Update order tracking information
-// @access  Private (Admin only)
 router.put('/:id/tracking', [
   body('carrier').notEmpty().withMessage('Carrier is required'),
   body('trackingNumber').notEmpty().withMessage('Tracking number is required')
@@ -306,7 +293,6 @@ router.put('/:id/tracking', [
       });
     }
 
-    // Update tracking information
     order.tracking = {
       carrier,
       trackingNumber,
@@ -314,12 +300,13 @@ router.put('/:id/tracking', [
       estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : undefined
     };
 
-    // Update status to shipped if not already
     if (order.status === 'processing') {
       order.status = 'shipped';
     }
 
     await order.save();
+
+    socketService.emitOrderUpdate(order);
 
     res.json({
       success: true,

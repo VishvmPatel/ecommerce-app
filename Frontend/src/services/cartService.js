@@ -1,7 +1,6 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
 class CartService {
-  // Generic fetch method
   async fetchData(endpoint, options = {}) {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -24,7 +23,6 @@ class CartService {
     }
   }
 
-  // Add item to cart (for logged-in users)
   async addToCart(productId, quantity = 1, token) {
     return this.fetchData('/cart/add', {
       method: 'POST',
@@ -35,7 +33,6 @@ class CartService {
     });
   }
 
-  // Get user's cart
   async getCart(token) {
     return this.fetchData('/cart', {
       headers: {
@@ -44,7 +41,6 @@ class CartService {
     });
   }
 
-  // Update cart item quantity
   async updateCartItem(productId, quantity, token) {
     return this.fetchData(`/cart/items/${productId}`, {
       method: 'PUT',
@@ -55,7 +51,6 @@ class CartService {
     });
   }
 
-  // Remove item from cart
   async removeFromCart(productId, token) {
     return this.fetchData(`/cart/items/${productId}`, {
       method: 'DELETE',
@@ -65,7 +60,6 @@ class CartService {
     });
   }
 
-  // Clear entire cart
   async clearCart(token) {
     return this.fetchData('/cart/clear', {
       method: 'DELETE',
@@ -75,7 +69,6 @@ class CartService {
     });
   }
 
-  // Sync local cart with server (for logged-in users)
   async syncCart(localCartItems, token) {
     return this.fetchData('/cart/sync', {
       method: 'POST',
@@ -86,7 +79,6 @@ class CartService {
     });
   }
 
-  // Calculate cart totals
   calculateCartTotals(items) {
     const subtotal = items.reduce((total, item) => {
       return total + (item.price * item.quantity);
@@ -112,7 +104,6 @@ class CartService {
     };
   }
 
-  // Validate cart items (check stock, prices, etc.)
   async validateCartItems(items) {
     return this.fetchData('/cart/validate', {
       method: 'POST',
@@ -121,6 +112,5 @@ class CartService {
   }
 }
 
-// Create and export a singleton instance
 const cartService = new CartService();
 export default cartService;

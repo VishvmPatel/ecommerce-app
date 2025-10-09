@@ -53,16 +53,13 @@ const MyAddresses = () => {
 
       let updatedAddresses;
       if (editingAddress) {
-        // Update existing address
         updatedAddresses = addresses.map(addr => 
           addr.id === editingAddress.id ? newAddress : addr
         );
       } else {
-        // Add new address
         updatedAddresses = [...addresses, newAddress];
       }
 
-      // If this is set as default, unset all other defaults
       if (newAddress.isDefault) {
         updatedAddresses = updatedAddresses.map(addr => ({
           ...addr,
@@ -70,7 +67,6 @@ const MyAddresses = () => {
         }));
       }
 
-      // Update user in context and localStorage
       const updatedUser = { ...user, addresses: updatedAddresses };
       updateUser(updatedUser);
 
@@ -111,7 +107,6 @@ const MyAddresses = () => {
     if (window.confirm('Are you sure you want to delete this address?')) {
       const updatedAddresses = addresses.filter(addr => addr.id !== addressId);
       
-      // If we deleted the default address, make the first remaining address default
       if (addresses.find(addr => addr.id === addressId)?.isDefault && updatedAddresses.length > 0) {
         updatedAddresses[0].isDefault = true;
       }

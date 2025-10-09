@@ -23,7 +23,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function() {
+      return this.authProvider === 'local';
+    },
     minlength: [6, 'Password must be at least 6 characters long']
   },
   phone: {
@@ -38,6 +40,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['male', 'female', 'other', 'prefer-not-to-say', 'not-specified'],
     default: 'not-specified'
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  city: {
+    type: String,
+    trim: true
+  },
+  state: {
+    type: String,
+    trim: true
+  },
+  pincode: {
+    type: String,
+    trim: true,
+    match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
   },
   addresses: [{
     type: {
@@ -132,6 +151,8 @@ const userSchema = new mongoose.Schema({
   emailVerificationToken: String,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  resetPasswordOTP: String,
+  resetPasswordExpires: Date,
   lastLogin: Date,
   loginAttempts: {
     type: Number,
@@ -146,6 +167,24 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['customer', 'admin', 'moderator'],
     default: 'customer'
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true // Allows null values but ensures uniqueness when present
+  },
+  profilePicture: {
+    type: String,
+    default: null
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true,
@@ -153,27 +192,22 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for full name
 userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Virtual for account locked status
 userSchema.virtual('isLocked').get(function() {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
-// Index for better query performance
 userSchema.index({ phone: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isActive: 1 });
 
-// Pre-save middleware to ensure only one default address
 userSchema.pre('save', function(next) {
   if (this.addresses && this.addresses.length > 0) {
     const defaultAddresses = this.addresses.filter(addr => addr.isDefault);
     if (defaultAddresses.length > 1) {
-      // Keep only the first default address
       this.addresses.forEach((addr, index) => {
         if (index > 0) addr.isDefault = false;
       });

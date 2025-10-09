@@ -19,7 +19,6 @@ const ProfilePage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Initialize form data when user data loads
   useEffect(() => {
     if (user) {
       setFormData({
@@ -40,7 +39,6 @@ const ProfilePage = () => {
       [name]: value
     });
 
-    // Clear validation error for this field
     if (validationErrors[name]) {
       setValidationErrors({
         ...validationErrors,
@@ -48,7 +46,6 @@ const ProfilePage = () => {
       });
     }
 
-    // Clear messages
     if (successMessage) setSuccessMessage('');
     if (errorMessage) setErrorMessage('');
   };
@@ -119,7 +116,6 @@ const ProfilePage = () => {
   };
 
   const handleCancel = () => {
-    // Reset form data to original user data
     if (user) {
       setFormData({
         firstName: user.firstName || '',

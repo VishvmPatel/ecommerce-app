@@ -53,7 +53,7 @@ const productSchema = new mongoose.Schema({
   gender: {
     type: String,
     required: [true, 'Gender specification is required'],
-    enum: ['men', 'women', 'children', 'unisex']
+    enum: ['Men', 'Women', 'Kids', 'Unisex']
   },
   sizes: [{
     type: String,
@@ -148,20 +148,17 @@ const productSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for average rating
 productSchema.virtual('averageRating').get(function() {
-  if (this.reviews.length === 0) return 0;
+  if (!this.reviews || this.reviews.length === 0) return 0;
   const sum = this.reviews.reduce((acc, review) => acc + review.rating, 0);
   return Math.round((sum / this.reviews.length) * 10) / 10;
 });
 
-// Virtual for discount percentage
 productSchema.virtual('discountPercentage').get(function() {
   if (!this.originalPrice || this.originalPrice <= this.price) return 0;
   return Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
 });
 
-// Index for better query performance
 productSchema.index({ name: 'text', description: 'text', brand: 'text' });
 productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ gender: 1 });
@@ -171,7 +168,6 @@ productSchema.index({ createdAt: -1 });
 productSchema.index({ isFeatured: 1 });
 productSchema.index({ isNewProduct: 1 });
 
-// Pre-save middleware to calculate discount
 productSchema.pre('save', function(next) {
   if (this.originalPrice && this.originalPrice > this.price) {
     this.discount = Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
@@ -179,7 +175,6 @@ productSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-save middleware to update review count
 productSchema.pre('save', function(next) {
   this.reviewCount = this.reviews.length;
   next();

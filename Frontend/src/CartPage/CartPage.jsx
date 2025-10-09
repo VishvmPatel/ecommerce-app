@@ -38,7 +38,6 @@ const CartPage = () => {
 
   const handleCheckout = () => {
     setIsCheckingOut(true);
-    // Simulate checkout process
     setTimeout(() => {
       alert('Order placed successfully! Redirecting to order confirmation...');
       clearCart();

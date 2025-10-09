@@ -5,9 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 
-// @route   POST /api/users/register
-// @desc    Register a new user
-// @access  Public
 router.post('/register', [
   body('firstName').trim().isLength({ min: 1, max: 50 }).withMessage('First name is required'),
   body('lastName').trim().isLength({ min: 1, max: 50 }).withMessage('Last name is required'),
@@ -26,7 +23,6 @@ router.post('/register', [
 
     const { firstName, lastName, email, password, phone, dateOfBirth, gender } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -35,11 +31,9 @@ router.post('/register', [
       });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const user = new User({
       firstName,
       lastName,
@@ -52,7 +46,6 @@ router.post('/register', [
 
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
@@ -83,9 +76,6 @@ router.post('/register', [
   }
 });
 
-// @route   POST /api/users/login
-// @desc    Login user
-// @access  Public
 router.post('/login', [
   body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
   body('password').notEmpty().withMessage('Password is required')
@@ -102,7 +92,6 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
@@ -111,7 +100,6 @@ router.post('/login', [
       });
     }
 
-    // Check if account is locked
     if (user.isLocked) {
       return res.status(400).json({
         success: false,
@@ -119,10 +107,8 @@ router.post('/login', [
       });
     }
 
-    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      // Increment login attempts
       user.loginAttempts += 1;
       if (user.loginAttempts >= 5) {
         user.lockUntil = Date.now() + 2 * 60 * 60 * 1000; // Lock for 2 hours
@@ -135,13 +121,11 @@ router.post('/login', [
       });
     }
 
-    // Reset login attempts on successful login
     user.loginAttempts = 0;
     user.lockUntil = undefined;
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
@@ -172,12 +156,8 @@ router.post('/login', [
   }
 });
 
-// @route   GET /api/users/profile
-// @desc    Get user profile
-// @access  Private
 router.get('/profile', async (req, res) => {
   try {
-    // In a real app, you'd get user ID from JWT token
     const userId = req.user?.id;
     
     if (!userId) {
@@ -211,9 +191,6 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/profile
-// @desc    Update user profile
-// @access  Private
 router.put('/profile', [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
@@ -269,9 +246,6 @@ router.put('/profile', [
   }
 });
 
-// @route   POST /api/users/wishlist/:productId
-// @desc    Add product to wishlist
-// @access  Private
 router.post('/wishlist/:productId', async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -292,7 +266,6 @@ router.post('/wishlist/:productId', async (req, res) => {
       });
     }
 
-    // Check if product is already in wishlist
     if (user.wishlist.includes(productId)) {
       return res.status(400).json({
         success: false,
@@ -318,9 +291,6 @@ router.post('/wishlist/:productId', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/users/wishlist/:productId
-// @desc    Remove product from wishlist
-// @access  Private
 router.delete('/wishlist/:productId', async (req, res) => {
   try {
     const userId = req.user?.id;

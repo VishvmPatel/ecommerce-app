@@ -1,7 +1,6 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
 class AuthService {
-  // Generic fetch method
   async fetchData(endpoint, options = {}) {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -25,7 +24,6 @@ class AuthService {
     }
   }
 
-  // Register a new user
   async register(userData) {
     return this.fetchData('/auth/register', {
       method: 'POST',
@@ -33,7 +31,6 @@ class AuthService {
     });
   }
 
-  // Login user
   async login(email, password) {
     return this.fetchData('/auth/login', {
       method: 'POST',
@@ -41,7 +38,6 @@ class AuthService {
     });
   }
 
-  // Logout user
   async logout() {
     const token = this.getToken();
     if (!token) {
@@ -56,17 +52,14 @@ class AuthService {
         }
       });
       
-      // Remove token from localStorage regardless of API response
       this.removeToken();
       return result;
     } catch (error) {
-      // Even if API call fails, remove token locally
       this.removeToken();
       return { success: true, message: 'Logged out locally' };
     }
   }
 
-  // Get current user
   async getCurrentUser() {
     const token = this.getToken();
     if (!token) {
@@ -80,7 +73,6 @@ class AuthService {
     });
   }
 
-  // Update user profile
   async updateProfile(profileData) {
     const token = this.getToken();
     if (!token) {
@@ -96,7 +88,6 @@ class AuthService {
     });
   }
 
-  // Change password
   async changePassword(currentPassword, newPassword) {
     const token = this.getToken();
     if (!token) {
@@ -112,37 +103,40 @@ class AuthService {
     });
   }
 
-  // Token management
   getToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   }
 
-  setToken(token) {
-    localStorage.setItem('authToken', token);
+  setToken(token, rememberMe = false) {
+    if (rememberMe) {
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('rememberMe', 'true');
+    } else {
+      sessionStorage.setItem('authToken', token);
+      localStorage.removeItem('rememberMe');
+    }
   }
 
   removeToken() {
     localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
+    localStorage.removeItem('rememberMe');
   }
 
-  // Check if user is authenticated
   isAuthenticated() {
     const token = this.getToken();
     if (!token) return false;
 
     try {
-      // Basic JWT token validation (check if it's not expired)
       const payload = JSON.parse(atob(token.split('.')[1]));
       const currentTime = Date.now() / 1000;
       return payload.exp > currentTime;
     } catch (error) {
-      // If token is malformed, remove it
       this.removeToken();
       return false;
     }
   }
 
-  // Get user info from token (without API call)
   getUserFromToken() {
     const token = this.getToken();
     if (!token) return null;
@@ -155,13 +149,11 @@ class AuthService {
     }
   }
 
-  // Validate email format
   validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  // Validate password strength
   validatePassword(password) {
     const minLength = password.length >= 6;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -179,13 +171,11 @@ class AuthService {
     };
   }
 
-  // Validate phone number
   validatePhone(phone) {
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
     return phoneRegex.test(phone);
   }
 }
 
-// Create and export a singleton instance
 const authService = new AuthService();
 export default authService;

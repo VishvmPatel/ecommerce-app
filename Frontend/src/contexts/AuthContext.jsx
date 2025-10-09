@@ -80,12 +80,6 @@ const authReducer = (state, action) => {
         error: null
       };
 
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        user: action.payload
-      };
-
     case 'SET_LOADING':
       return {
         ...state,
@@ -108,11 +102,28 @@ const initialState = {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing token on app load
   useEffect(() => {
     const initializeAuth = async () => {
       const token = authService.getToken();
+      const storedUser = localStorage.getItem('user');
+      
       if (token && authService.isAuthenticated()) {
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            dispatch({
+              type: 'LOGIN_SUCCESS',
+              payload: {
+                user: userData,
+                token: token
+              }
+            });
+            return;
+          } catch (error) {
+            console.error('Failed to parse stored user data:', error);
+          }
+        }
+        
         try {
           dispatch({ type: 'SET_LOADING', payload: true });
           const response = await authService.getCurrentUser();
@@ -126,22 +137,26 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Token validation failed:', error);
           authService.removeToken();
+          localStorage.removeItem('user');
           dispatch({ type: 'LOGOUT' });
         }
+      } else {
+        dispatch({ type: 'LOGOUT' });
       }
     };
 
-    initializeAuth();
+    if (!state.isAuthenticated) {
+      initializeAuth();
+    }
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
       dispatch({ type: 'LOGIN_START' });
 
       const response = await authService.login(email, password);
       
-      // Store token
-      authService.setToken(response.token);
+      authService.setToken(response.token, rememberMe);
       
       dispatch({
         type: 'LOGIN_SUCCESS',
@@ -162,13 +177,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (userData, token) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+
+      authService.setToken(token, true); // Remember Google users
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: {
+          user: userData,
+          token: token
+        }
+      });
+
+      return { success: true, user: userData };
+    } catch (error) {
+      const errorMessage = error.message || 'Google login failed';
+      dispatch({
+        type: 'LOGIN_FAILURE',
+        payload: errorMessage
+      });
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const register = async (userData) => {
     try {
       dispatch({ type: 'REGISTER_START' });
 
       const response = await authService.register(userData);
       
-      // Store token
       authService.setToken(response.token);
       
       dispatch({
@@ -196,6 +237,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('user');
       dispatch({ type: 'LOGOUT' });
     }
   };
@@ -238,6 +280,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     ...state,
     login,
+    googleLogin,
     register,
     logout,
     updateProfile,

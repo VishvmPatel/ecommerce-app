@@ -35,7 +35,6 @@ const AccessoriesPage = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch accessories from multiple categories
         const [eyewearResponse, headwearResponse, filterOptionsResponse] = await Promise.all([
           apiService.getProductsByCategory('Eyewear', 20),
           apiService.getProductsByCategory('Headwear', 20),
