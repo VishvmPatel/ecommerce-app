@@ -132,11 +132,9 @@ const GoogleSignInButton = ({ text = 'Continue with Google' }) => {
       </button>
       
       {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-2 text-xs text-gray-500 text-center">
-          Google Script: {isGoogleLoaded ? '✅ Loaded' : '⏳ Loading...'}
-        </div>
-      )}
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        Google Script: {isGoogleLoaded ? '✅ Loaded' : '⏳ Loading...'}
+      </div>
     </div>
   );
 };
