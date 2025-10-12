@@ -201,21 +201,54 @@ const ChatBot = ({ isOpen, onClose }) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponse = getBotResponse(inputMessage);
+    try {
+      // Try to use the enhanced AI service
+      const response = await fetch('/api/chatbot/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentMessage,
+          sessionId: `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const botMessage = {
+          id: Date.now() + 1,
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date(),
+          source: data.source,
+          confidence: data.confidence
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        throw new Error('API request failed');
+      }
+    } catch (error) {
+      console.log('AI service unavailable, using local responses');
+      // Fallback to local bot responses
+      const botResponse = getBotResponse(currentMessage);
       const botMessage = {
         id: Date.now() + 1,
         text: botResponse,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        source: 'local'
       };
       
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -295,11 +328,32 @@ const ChatBot = ({ isOpen, onClose }) => {
                     : 'bg-gray-100 text-gray-800'
                 }`}>
                   <p className="text-sm">{message.text}</p>
-                  <p className={`text-xs mt-1 ${
+                  <div className={`flex items-center justify-between mt-1 ${
                     message.sender === 'user' ? 'text-purple-100' : 'text-gray-500'
                   }`}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                    <p className="text-xs">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    {message.sender === 'bot' && message.source && (
+                      <div className="flex items-center space-x-1">
+                        {message.source === 'ai_bot' && (
+                          <span className="text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded">
+                            🤖 AI
+                          </span>
+                        )}
+                        {message.source === 'fallback' && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-1 py-0.5 rounded">
+                            📊 ML
+                          </span>
+                        )}
+                        {message.source === 'local' && (
+                          <span className="text-xs bg-gray-100 text-gray-700 px-1 py-0.5 rounded">
+                            💬 Local
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

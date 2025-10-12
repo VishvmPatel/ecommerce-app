@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const WishlistContext = createContext();
 
@@ -61,85 +64,131 @@ const initialState = {
 
 export const WishlistProvider = ({ children }) => {
   const [state, dispatch] = useReducer(wishlistReducer, initialState);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { showWishlistSuccess, showWishlistRemoved, showLoginRequired } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated) {
       loadWishlist();
     } else {
+      // Clear wishlist when user logs out
       dispatch({ type: 'SET_WISHLIST', payload: [] });
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
 
   const loadWishlist = async () => {
+    if (!isAuthenticated) return;
+    
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      const savedWishlist = localStorage.getItem(`wishlist_${user.id}`);
-      if (savedWishlist) {
-        const wishlist = JSON.parse(savedWishlist);
-        dispatch({ type: 'SET_WISHLIST', payload: wishlist });
+      const response = await apiService.getWishlist();
+      if (response.success) {
+        // Transform the data to match frontend expectations
+        const wishlistItems = response.data.map(item => ({
+          _id: item.product._id,
+          name: item.product.name,
+          price: item.product.price,
+          originalPrice: item.product.originalPrice,
+          image: item.product.images?.[0]?.url,
+          images: item.product.images,
+          category: item.product.category,
+          brand: item.product.brand,
+          inStock: item.product.inStock,
+          rating: item.product.rating,
+          reviewCount: item.product.reviewCount,
+          addedAt: item.addedAt
+        }));
+        dispatch({ type: 'SET_WISHLIST', payload: wishlistItems });
       } else {
-        dispatch({ type: 'SET_WISHLIST', payload: [] });
+        dispatch({ type: 'SET_ERROR', payload: response.message || 'Failed to load wishlist' });
       }
     } catch (error) {
       console.error('Error loading wishlist:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load wishlist' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const addToWishlist = async (product) => {
-    try {
-      if (!isAuthenticated) {
-        dispatch({ type: 'SET_ERROR', payload: 'Please log in to add items to wishlist' });
-        return { success: false, error: 'Please log in to add items to wishlist' };
-      }
+    if (!isAuthenticated) {
+      showLoginRequired('add items to wishlist');
+      return { success: false, error: 'Please log in to add items to wishlist' };
+    }
 
+    try {
       const existingItem = state.wishlist.find(item => item._id === product._id);
       if (existingItem) {
         return { success: false, error: 'Item already in wishlist' };
       }
 
-      const wishlistItem = {
-        _id: product._id || product.id,
-        name: product.name,
-        price: product.price,
-        originalPrice: product.originalPrice,
-        image: product.images?.[0]?.url || product.image,
-        images: product.images,
-        category: product.category,
-        brand: product.brand,
-        addedAt: new Date().toISOString()
-      };
-
-      dispatch({ type: 'ADD_TO_WISHLIST', payload: wishlistItem });
-
-      const updatedWishlist = [...state.wishlist, wishlistItem];
-      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
-
-      return { success: true };
+      const response = await apiService.addToWishlist(product._id);
+      if (response.success) {
+        // Transform the added item to match frontend expectations
+        const wishlistItem = {
+          _id: product._id,
+          name: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice,
+          image: product.images?.[0]?.url,
+          images: product.images,
+          category: product.category,
+          brand: product.brand,
+          inStock: product.inStock,
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+          addedAt: new Date().toISOString()
+        };
+        
+        dispatch({ type: 'ADD_TO_WISHLIST', payload: wishlistItem });
+        
+        // Show success toast
+        showWishlistSuccess(product.name || 'Product', {
+          action: (
+            <button 
+              onClick={() => navigate('/wishlist')}
+              className="text-pink-600 hover:text-pink-700 font-medium underline"
+            >
+              View Wishlist
+            </button>
+          )
+        });
+        
+        return { success: true };
+      } else {
+        return { success: false, error: response.message || 'Failed to add to wishlist' };
+      }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to add to wishlist' });
       return { success: false, error: 'Failed to add to wishlist' };
     }
   };
 
   const removeFromWishlist = async (productId) => {
+    if (!isAuthenticated) {
+      return { success: false, error: 'Please log in to manage wishlist' };
+    }
+
     try {
-      if (!isAuthenticated) {
-        return { success: false, error: 'Please log in to manage wishlist' };
+      // Get product name before removing
+      const item = state.wishlist.find(item => item._id === productId);
+      const productName = item?.name || 'Product';
+      
+      const response = await apiService.removeFromWishlist(productId);
+      if (response.success) {
+        dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: productId });
+        
+        // Show removal toast
+        showWishlistRemoved(productName);
+        
+        return { success: true };
+      } else {
+        return { success: false, error: response.message || 'Failed to remove from wishlist' };
       }
-
-      dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: productId });
-
-      const updatedWishlist = state.wishlist.filter(item => item._id !== productId);
-      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
-
-      return { success: true };
     } catch (error) {
       console.error('Error removing from wishlist:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to remove from wishlist' });
       return { success: false, error: 'Failed to remove from wishlist' };
     }
   };
@@ -152,14 +201,35 @@ export const WishlistProvider = ({ children }) => {
     return state.wishlist.length;
   };
 
+  const clearWishlist = async () => {
+    if (!isAuthenticated) {
+      return { success: false, error: 'Please log in to manage wishlist' };
+    }
+
+    try {
+      const response = await apiService.clearWishlist();
+      if (response.success) {
+        dispatch({ type: 'SET_WISHLIST', payload: [] });
+        return { success: true };
+      } else {
+        return { success: false, error: response.message || 'Failed to clear wishlist' };
+      }
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+      return { success: false, error: 'Failed to clear wishlist' };
+    }
+  };
+
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
   const value = {
     ...state,
+    wishlistItems: state.wishlist, // Alias for compatibility
     addToWishlist,
     removeFromWishlist,
+    clearWishlist,
     isInWishlist,
     getWishlistCount,
     clearError,

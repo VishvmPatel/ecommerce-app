@@ -56,16 +56,22 @@ const CategoryPage = () => {
     fetchProducts();
   }, [category, filters]);
 
+  useEffect(() => {
+    // Refetch products when authentication state changes
+    fetchProducts();
+  }, [isAuthenticated]);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const queryParams = new URLSearchParams({
+      setError(null);
+      
+      const params = {
         category: displayName,
         ...filters
-      });
+      };
 
-      const response = await fetch(`http://localhost:5000/api/products?${queryParams}`);
-      const data = await response.json();
+      const data = await apiService.getProducts(params);
 
       if (data.success) {
         const productsData = data.data?.products || data.data || [];
@@ -100,19 +106,20 @@ const CategoryPage = () => {
     });
   };
 
-  const handleWishlistToggle = async (productId) => {
+  const handleWishlistToggle = async (product) => {
     if (!isAuthenticated) {
       alert('Please login to add items to wishlist');
       return;
     }
 
+    const productId = product._id || product.id;
     setWishlistLoading(prev => ({ ...prev, [productId]: true }));
 
     try {
       if (isInWishlist(productId)) {
         await removeFromWishlist(productId);
       } else {
-        await addToWishlist(productId);
+        await addToWishlist(product);
       }
     } catch (error) {
       console.error('Wishlist error:', error);
@@ -302,7 +309,7 @@ const CategoryPage = () => {
                   </Link>
                   
                   <button
-                    onClick={() => handleWishlistToggle(product._id)}
+                    onClick={() => handleWishlistToggle(product)}
                     disabled={wishlistLoading[product._id]}
                     className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200"
                   >

@@ -1,9 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Navigation from '../../customers/components/Navigation/Navigation.jsx';
 import HomePage from '../../customers/pages/HomePage/HomePage.jsx';
-import LoginPage from '../../customers/pages/Auth/LoginPage/LoginPage.jsx';
-import SignUpPage from '../../customers/pages/Auth/SignUpPage/SignUpPage.jsx';
 import AboutUs from '../../customers/pages/AboutUs/AboutUs.jsx';
 import ContactUs from '../../customers/pages/ContactUs/ContactUs.jsx';
 import ProductDetail from '../../customers/pages/ProductDetail/ProductDetail.jsx';
@@ -17,36 +15,29 @@ import SalesPage from '../../customers/pages/SalesPage/SalesPage.jsx';
 import AllProducts from '../../customers/pages/AllProducts/AllProducts.jsx';
 import Collections from '../../customers/pages/Collections/Collections.jsx';
 import CartPage from '../../customers/pages/CartPage/CartPage.jsx';
-import WishlistPage from '../../customers/pages/WishlistPage/WishlistPage.jsx';
-import ProfilePage from '../../customers/pages/ProfilePage/ProfilePage.jsx';
-import MyAddresses from '../../customers/pages/MyAddresses/MyAddresses.jsx';
-import MyOrders from '../../customers/pages/MyOrders/MyOrders.jsx';
+import CheckoutPage from '../../customers/pages/CheckoutPage/CheckoutPage.jsx';
+import OrderConfirmationPage from '../../customers/pages/OrderConfirmation/OrderConfirmationPage.jsx';
 import HelpSupport from '../../customers/pages/HelpSupport/HelpSupport.jsx';
-import ForgotPassword from '../../customers/pages/Auth/ForgotPassword/ForgotPassword.jsx';
-import ResetPassword from '../../customers/pages/Auth/ResetPassword/ResetPassword.jsx';
-import GoogleSignInTest from '../../customers/pages/GoogleSignInTest/GoogleSignInTest';
-import GoogleCallback from '../../customers/pages/Auth/GoogleCallback/GoogleCallback';
-import GoogleCallbackDebug from '../../customers/pages/Auth/GoogleCallbackDebug/GoogleCallbackDebug';
-import GoogleAuthTest from '../../customers/pages/Auth/GoogleAuthTest/GoogleAuthTest';
-import GoogleCallbackTest from '../../customers/pages/Auth/GoogleCallbackTest/GoogleCallbackTest';
-import ProfileCompletionModal from '../../customers/components/ProfileCompletionModal/ProfileCompletionModal';
+import WishlistPage from '../../customers/pages/WishlistPage/WishlistPage.jsx';
+import MyOrdersPage from '../../customers/pages/MyOrdersPage/MyOrdersPage.jsx';
+import MyAddressesPage from '../../customers/pages/MyAddressesPage/MyAddressesPage.jsx';
+import MyProfilePage from '../../customers/pages/MyProfilePage/MyProfilePage.jsx';
+import LoginPage from '../../customers/pages/Auth/LoginPage/LoginPage.jsx';
+import SignUpPage from '../../customers/pages/Auth/SignUpPage/SignUpPage.jsx';
+import ForgotPasswordPage from '../../customers/pages/Auth/ForgotPasswordPage/ForgotPasswordPage.jsx';
+import OTPVerificationPage from '../../customers/pages/Auth/OTPVerificationPage/OTPVerificationPage.jsx';
+import ResetPasswordPage from '../../customers/pages/Auth/ResetPasswordPage/ResetPasswordPage.jsx';
 import FloatingChatButton from '../../customers/components/FloatingChatButton/FloatingChatButton.jsx';
-import ProfileCompletionTest from '../ProfileCompletionTest/ProfileCompletionTest';
-import AdminRoutes from '../../admin/AdminRoutes';
-import { useProfileCompletion } from '../../hooks/useProfileCompletion';
+import AdminRouter from '../../admin/AdminRouter.jsx';
 
 const AppContent = () => {
-  const { showModal, closeModal, handleProfileComplete, user } = useProfileCompletion();
-
   return (
-    <Router>
+    <>
       <div className="min-h-screen bg-gray-50 w-full">
         <Navigation />
         <Routes>
           {/* Customer Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/product/:id" element={<ProductDetail />} />
@@ -60,34 +51,27 @@ const AppContent = () => {
           <Route path="/all-products" element={<AllProducts />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/help-support" element={<HelpSupport />} />
           <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/addresses" element={<MyAddresses />} />
-          <Route path="/orders" element={<MyOrders />} />
-          <Route path="/help" element={<HelpSupport />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/google-test" element={<GoogleSignInTest />} />
-          <Route path="/google-callback" element={<GoogleCallback />} />
-          <Route path="/google-callback-debug" element={<GoogleCallbackDebug />} />
-          <Route path="/google-auth-test" element={<GoogleAuthTest />} />
-          <Route path="/google-callback-test" element={<GoogleCallbackTest />} />
-          <Route path="/profile-test" element={<ProfileCompletionTest />} />
+          <Route path="/my-orders" element={<MyOrdersPage />} />
+          <Route path="/my-addresses" element={<MyAddressesPage />} />
+          <Route path="/my-profile" element={<MyProfilePage />} />
+          
+          {/* Authentication Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-otp" element={<OTPVerificationPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           
           {/* Admin Routes */}
-          <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/admin/*" element={<AdminRouter />} />
         </Routes>
       </div>
       <FloatingChatButton />
-      
-      {/* Profile Completion Modal */}
-      <ProfileCompletionModal
-        isOpen={showModal}
-        onClose={closeModal}
-        user={user}
-        onComplete={handleProfileComplete}
-      />
-    </Router>
+    </>
   );
 };
 

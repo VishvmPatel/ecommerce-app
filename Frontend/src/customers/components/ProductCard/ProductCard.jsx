@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom';
 import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useWishlist } from '../../../contexts/WishlistContext';
+import { useCart } from '../../../contexts/CartContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import ProductReviewStats from '../ProductReviewStats/ProductReviewStats';
 
 const ProductCard = ({ product }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
 
   const handleWishlistToggle = async (e) => {
     e.preventDefault();
@@ -36,6 +39,39 @@ const ProductCard = ({ product }) => {
       console.error('Error toggling wishlist:', error);
     } finally {
       setWishlistLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+
+    setCartLoading(true);
+    
+    try {
+      const cartProduct = {
+        id: product._id || product.id,
+        name: product.name,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        image: product.images?.[0]?.url || product.image,
+        images: product.images,
+        category: product.category,
+        brand: product.brand,
+        size: 'default', // Default size, can be enhanced later
+        color: 'default' // Default color, can be enhanced later
+      };
+      
+      addToCart(cartProduct);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setCartLoading(false);
     }
   };
 
@@ -87,21 +123,39 @@ const ProductCard = ({ product }) => {
         <div className={`absolute top-3 right-3 transition-all duration-300 ${
           isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
         }`}>
-          <button
-            onClick={handleWishlistToggle}
-            disabled={wishlistLoading}
-            className={`w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors duration-200 ${
-              wishlistLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {wishlistLoading ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin"></div>
-            ) : isInWishlist(product._id || product.id) ? (
-              <HeartSolidIcon className="w-5 h-5 text-red-500" />
-            ) : (
-              <HeartIcon className="w-5 h-5 text-gray-600 hover:text-red-500" />
-            )}
-          </button>
+          <div className="flex flex-col space-y-2">
+            {/* Wishlist Button */}
+            <button
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              className={`w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors duration-200 ${
+                wishlistLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {wishlistLoading ? (
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin"></div>
+              ) : isInWishlist(product._id || product.id) ? (
+                <HeartSolidIcon className="w-5 h-5 text-red-500" />
+              ) : (
+                <HeartIcon className="w-5 h-5 text-gray-600 hover:text-red-500" />
+              )}
+            </button>
+            
+            {/* Cart Button */}
+            <button
+              onClick={handleAddToCart}
+              disabled={cartLoading}
+              className={`w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors duration-200 ${
+                cartLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {cartLoading ? (
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-purple-500 rounded-full animate-spin"></div>
+              ) : (
+                <ShoppingBagIcon className="w-5 h-5 text-gray-600 hover:text-purple-600" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className={`absolute bottom-3 left-3 right-3 transition-all duration-300 ${
@@ -148,11 +202,11 @@ const ProductCard = ({ product }) => {
           
           <div className="flex items-center">
             <span className={`text-xs px-2 py-1 rounded-full ${
-              product.inStock 
+              product.stockQuantity > 0 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
             }`}>
-              {product.inStock ? 'In Stock' : 'Out of Stock'}
+              {product.stockQuantity > 0 ? `${product.stockQuantity} in stock` : 'Out of Stock'}
             </span>
           </div>
         </div>

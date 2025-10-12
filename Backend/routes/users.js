@@ -1,235 +1,108 @@
 const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const { auth } = require('../middleware/auth');
 
-router.post('/register', [
-  body('firstName').trim().isLength({ min: 1, max: 50 }).withMessage('First name is required'),
-  body('lastName').trim().isLength({ min: 1, max: 50 }).withMessage('Last name is required'),
-  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-], async (req, res) => {
+const router = express.Router();
+
+// @route   GET /api/users/profile
+// @desc    Get user profile
+// @access  Private
+router.get('/profile', auth, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation errors',
-        errors: errors.array()
-      });
-    }
-
-    const { firstName, lastName, email, password, phone, dateOfBirth, gender } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email already exists'
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      phone,
-      dateOfBirth,
-      gender
-    });
-
-    await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          role: user.role
-        },
-        token
-      }
-    });
-  } catch (error) {
-    console.error('Error registering user:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error registering user',
-      error: error.message
-    });
-  }
-});
-
-router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation errors',
-        errors: errors.array()
-      });
-    }
-
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
-    if (user.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'Account is temporarily locked due to too many failed login attempts'
-      });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      user.loginAttempts += 1;
-      if (user.loginAttempts >= 5) {
-        user.lockUntil = Date.now() + 2 * 60 * 60 * 1000; // Lock for 2 hours
-      }
-      await user.save();
-
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
-    user.loginAttempts = 0;
-    user.lockUntil = undefined;
-    user.lastLogin = new Date();
-    await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          role: user.role
-        },
-        token
-      }
-    });
-  } catch (error) {
-    console.error('Error logging in user:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error logging in user',
-      error: error.message
-    });
-  }
-});
-
-router.get('/profile', async (req, res) => {
-  try {
-    const userId = req.user?.id;
+    const user = await User.findById(req.user._id).select('-password');
     
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
-    }
-
-    const user = await User.findById(userId)
-      .select('-password -emailVerificationToken -passwordResetToken -passwordResetExpires');
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
     res.json({
       success: true,
       data: user
     });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Error fetching profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching user profile',
-      error: error.message
+      message: 'Server error while fetching profile'
     });
   }
 });
 
-router.put('/profile', [
-  body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
-  body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
-  body('phone').optional().isMobilePhone(),
-  body('gender').optional().isIn(['male', 'female', 'other', 'prefer-not-to-say'])
+// @route   PUT /api/users/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', auth, [
+  body('firstName')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('First name is required and must be less than 50 characters'),
+  body('lastName')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Last name is required and must be less than 50 characters'),
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('phone')
+    .optional()
+    .matches(/^[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian mobile number'),
+  body('gender')
+    .optional()
+    .isIn(['male', 'female', 'other', 'prefer-not-to-say'])
+    .withMessage('Invalid gender value'),
+  body('bio')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Bio must be less than 500 characters')
 ], async (req, res) => {
   try {
+    // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation errors',
+        message: 'Validation failed',
         errors: errors.array()
       });
     }
 
-    const userId = req.user?.id;
-    
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      dateOfBirth,
+      gender,
+      bio
+    } = req.body;
+
+    // Check if email is already taken by another user
+    if (email !== req.user.email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already taken by another user'
+        });
+      }
     }
 
-    const { firstName, lastName, phone, dateOfBirth, gender } = req.body;
+    const updateData = {
+      firstName,
+      lastName,
+      email,
+      phone: phone || undefined,
+      dateOfBirth: dateOfBirth || undefined,
+      gender: gender || undefined,
+      bio: bio || undefined,
+      updatedAt: new Date()
+    };
 
     const user = await User.findByIdAndUpdate(
-      userId,
-      { firstName, lastName, phone, dateOfBirth, gender },
+      req.user._id,
+      updateData,
       { new: true, runValidators: true }
-    ).select('-password -emailVerificationToken -passwordResetToken -passwordResetExpires');
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+    ).select('-password');
 
     res.json({
       success: true,
@@ -237,28 +110,49 @@ router.put('/profile', [
       data: user
     });
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    console.error('Error updating profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating user profile',
-      error: error.message
+      message: 'Server error while updating profile'
     });
   }
 });
 
-router.post('/wishlist/:productId', async (req, res) => {
+// @route   PUT /api/users/change-password
+// @desc    Change user password
+// @access  Private
+router.put('/change-password', auth, [
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+  body('confirmPassword')
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) {
+        throw new Error('Password confirmation does not match');
+      }
+      return true;
+    })
+], async (req, res) => {
   try {
-    const userId = req.user?.id;
-    const { productId } = req.params;
-
-    if (!userId) {
-      return res.status(401).json({
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Validation failed',
+        errors: errors.array()
       });
     }
 
-    const user = await User.findById(userId);
+    const { currentPassword, newPassword } = req.body;
+
+    // Get user with password
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -266,15 +160,138 @@ router.post('/wishlist/:productId', async (req, res) => {
       });
     }
 
-    if (user.wishlist.includes(productId)) {
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
       return res.status(400).json({
         success: false,
-        message: 'Product already in wishlist'
+        message: 'Current password is incorrect'
       });
     }
 
-    user.wishlist.push(productId);
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    user.password = hashedNewPassword;
+    user.updatedAt = new Date();
     await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while changing password'
+    });
+  }
+});
+
+// @route   DELETE /api/users/account
+// @desc    Delete user account
+// @access  Private
+router.delete('/account', auth, [
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required to delete account')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { password } = req.body;
+
+    // Get user with password
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Delete user account
+    await User.findByIdAndDelete(req.user._id);
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting account'
+    });
+  }
+});
+
+// @route   GET /api/users/wishlist
+// @desc    Get user wishlist
+// @access  Private
+router.get('/wishlist', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('wishlist.product', 'name images price originalPrice category brand inStock rating reviewCount')
+      .select('wishlist');
+
+    res.json({
+      success: true,
+      data: user.wishlist || []
+    });
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching wishlist'
+    });
+  }
+});
+
+// @route   POST /api/users/wishlist/:productId
+// @desc    Add product to wishlist
+// @access  Private
+router.post('/wishlist/:productId', auth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    // Check if product is already in wishlist
+    const user = await User.findById(req.user._id);
+    const isInWishlist = user.wishlist.some(item => item.product.toString() === productId);
+
+    if (isInWishlist) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product is already in wishlist'
+      });
+    }
+
+    // Add to wishlist
+    user.wishlist.push({ product: productId, addedAt: new Date() });
+    await user.save();
+
+    // Populate the wishlist
+    await user.populate('wishlist.product', 'name images price originalPrice category brand inStock rating reviewCount');
 
     res.json({
       success: true,
@@ -285,33 +302,20 @@ router.post('/wishlist/:productId', async (req, res) => {
     console.error('Error adding to wishlist:', error);
     res.status(500).json({
       success: false,
-      message: 'Error adding to wishlist',
-      error: error.message
+      message: 'Server error while adding to wishlist'
     });
   }
 });
 
-router.delete('/wishlist/:productId', async (req, res) => {
+// @route   DELETE /api/users/wishlist/:productId
+// @desc    Remove product from wishlist
+// @access  Private
+router.delete('/wishlist/:productId', auth, async (req, res) => {
   try {
-    const userId = req.user?.id;
     const { productId } = req.params;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    user.wishlist = user.wishlist.filter(id => id.toString() !== productId);
+    const user = await User.findById(req.user._id);
+    user.wishlist = user.wishlist.filter(item => item.product.toString() !== productId);
     await user.save();
 
     res.json({
@@ -323,10 +327,33 @@ router.delete('/wishlist/:productId', async (req, res) => {
     console.error('Error removing from wishlist:', error);
     res.status(500).json({
       success: false,
-      message: 'Error removing from wishlist',
-      error: error.message
+      message: 'Server error while removing from wishlist'
+    });
+  }
+});
+
+// @route   DELETE /api/users/wishlist
+// @desc    Clear entire wishlist
+// @access  Private
+router.delete('/wishlist', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.wishlist = [];
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Wishlist cleared successfully',
+      data: []
+    });
+  } catch (error) {
+    console.error('Error clearing wishlist:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while clearing wishlist'
     });
   }
 });
 
 module.exports = router;
+

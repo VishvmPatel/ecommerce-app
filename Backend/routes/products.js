@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
       const normalizedGender = genderMap[gender] || [gender];
       filter.gender = { $in: normalizedGender };
     }
-    if (isNew !== undefined) filter.isNew = isNew === 'true';
+    if (isNew !== undefined) filter.isNewProduct = isNew === 'true';
     if (isFeatured !== undefined) filter.isFeatured = isFeatured === 'true';
     if (inStock !== undefined) filter.inStock = inStock === 'true';
 
@@ -88,8 +88,7 @@ router.get('/', async (req, res) => {
     const products = await Product.find(filter)
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit))
-      .populate('reviews.user', 'firstName lastName');
+      .limit(parseInt(limit));
 
     const total = await Product.countDocuments(filter);
 
@@ -135,8 +134,7 @@ router.get('/categories', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate('reviews.user', 'firstName lastName');
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -266,7 +264,7 @@ router.get('/new/items', async (req, res) => {
   try {
     const { limit = 8 } = req.query;
 
-    const products = await Product.find({ isNew: true })
+    const products = await Product.find({ isNewProduct: true })
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 

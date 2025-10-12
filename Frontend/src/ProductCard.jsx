@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HeartIcon, EyeIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { useCart } from '../../../contexts/CartContext';
+import { useCart } from './contexts/CartContext';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();

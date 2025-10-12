@@ -1,0 +1,184 @@
+{
+  "faqs": [
+    {
+      "question": "What is Fashion Forward?",
+      "answer": "Fashion Forward is a premium online fashion store offering the latest trends in clothing, accessories, and footwear for men and women. We specialize in casual wear, formal wear, party wear, and accessories with a focus on quality, style, and affordability.",
+      "intent": "general",
+      "keywords": ["about", "company", "fashion forward", "what is", "store", "shop"]
+    },
+    {
+      "question": "What are your shipping policies?",
+      "answer": "We offer FREE shipping on all orders above ₹2000! For orders below ₹2000, shipping charges are ₹99. Standard delivery takes 5-7 business days, while express delivery (₹199 extra) takes 2-3 business days. We deliver to all major cities and towns across India.",
+      "intent": "shipping",
+      "keywords": ["shipping", "delivery", "policy", "free shipping", "shipping cost", "delivery time"]
+    },
+    {
+      "question": "How long does delivery take?",
+      "answer": "Standard delivery takes 5-7 business days for most locations across India. For metro cities like Mumbai, Delhi, Bangalore, Chennai, delivery is usually 3-5 business days. Express delivery (₹199 extra) takes 2-3 business days. Remote locations may take 7-10 business days.",
+      "intent": "shipping",
+      "keywords": ["delivery", "time", "how long", "days", "shipping time", "delivery time"]
+    },
+    {
+      "question": "How can I view my orders?",
+      "answer": "You can view all your orders by logging into your account and clicking on 'My Orders' in the top navigation. Here you'll see your order history, current orders, order status, and can track deliveries. You can also access order details, download invoices, and manage returns from this section.",
+      "intent": "orders",
+      "keywords": ["view orders", "my orders", "order history", "order list", "see orders", "check orders"]
+    },
+    {
+      "question": "How can I track my order?",
+      "answer": "You can track your order by logging into your account and going to 'My Orders'. You'll also receive tracking updates via email and SMS. Once your order is shipped, you'll get a tracking number that you can use on our website or the courier's website.",
+      "intent": "shipping",
+      "keywords": ["track", "tracking", "order status", "tracking number", "track order"]
+    },
+    {
+      "question": "What is your return and exchange policy?",
+      "answer": "We offer a 7-day return and exchange policy. Items must be unworn, unwashed, and in original condition with tags attached. Returns are free for orders above ₹2000. For exchanges, we'll send the new item once we receive the original. Refunds are processed within 5-7 business days.",
+      "intent": "returns",
+      "keywords": ["return", "refund", "exchange", "return policy", "exchange policy", "return window"]
+    },
+    {
+      "question": "How do I return an item?",
+      "answer": "To return an item, log into your account, go to 'My Orders', select the order, and click 'Return'. Fill out the return form and we'll send you a return label. Pack the item securely and drop it off at the nearest pickup point. Returns are free for orders above ₹2000.",
+      "intent": "returns",
+      "keywords": ["return", "how to return", "return process", "return label", "send back"]
+    },
+    {
+      "question": "What payment methods do you accept?",
+      "answer": "We accept all major payment methods including Credit/Debit Cards, Net Banking, UPI (PhonePe, Google Pay, Paytm), Digital Wallets, and Cash on Delivery (COD). All payments are processed securely through our encrypted payment gateway.",
+      "intent": "payment",
+      "keywords": ["payment", "pay", "card", "upi", "cash on delivery", "cod", "payment methods"]
+    },
+    {
+      "question": "Is Cash on Delivery available?",
+      "answer": "Yes, Cash on Delivery (COD) is available for orders up to ₹5000. For orders above ₹5000, we require advance payment. COD charges are ₹50. You can pay the exact amount to the delivery person when you receive your order.",
+      "intent": "payment",
+      "keywords": ["cash on delivery", "cod", "pay on delivery", "cash payment"]
+    },
+    {
+      "question": "How do I find the right size?",
+      "answer": "We provide detailed size charts for all products. Click on 'Size Guide' on any product page to see measurements. Our size guide includes chest, waist, hip, and length measurements. If you're between sizes, we recommend going up one size for a comfortable fit.",
+      "intent": "sizing",
+      "keywords": ["size", "sizing", "size chart", "size guide", "measurements", "fit"]
+    },
+    {
+      "question": "Do you have a size guide?",
+      "answer": "Yes, we have comprehensive size guides for all our products. You can find the size guide on each product page. It includes detailed measurements for chest, waist, hip, length, and other relevant dimensions to help you choose the perfect fit.",
+      "intent": "sizing",
+      "keywords": ["size guide", "size chart", "measurements", "fit guide", "sizing"]
+    },
+    {
+      "question": "What are your product categories?",
+      "answer": "We offer a wide range of fashion categories including Casual Wear, Formal Wear, Party Wear, Accessories, Footwear, and Seasonal Collections. Our categories include Men's and Women's clothing, with subcategories like T-shirts, Jeans, Dresses, Kurtas, Sarees, and more.",
+      "intent": "products",
+      "keywords": ["categories", "products", "clothing", "fashion", "collections", "what do you sell"]
+    },
+    {
+      "question": "Do you have new arrivals?",
+      "answer": "Yes, we regularly update our collection with new arrivals every week! You can find the latest fashion trends in our 'New Arrivals' section. We also have seasonal collections and limited edition items. Follow us on social media to stay updated on new launches.",
+      "intent": "products",
+      "keywords": ["new arrivals", "latest", "new products", "new collection", "trending"]
+    },
+    {
+      "question": "Do you have sales or discounts?",
+      "answer": "Yes, we have regular sales and discounts throughout the year! We offer seasonal sales, festival discounts, and special promotions. You can also use coupon codes for additional savings. Sign up for our newsletter to get notified about upcoming sales and exclusive offers.",
+      "intent": "products",
+      "keywords": ["sale", "discount", "offers", "promotions", "coupon", "voucher", "deals"]
+    },
+    {
+      "question": "How do I create an account?",
+      "answer": "Creating an account is easy! Click on 'Sign Up' in the top right corner, enter your email address and password, and click 'Create Account'. You can also sign up using your Google account for faster registration. Once registered, you can track orders, save addresses, and enjoy personalized recommendations.",
+      "intent": "account",
+      "keywords": ["sign up", "register", "create account", "account", "signup"]
+    },
+    {
+      "question": "I forgot my password. How do I reset it?",
+      "answer": "To reset your password, click on 'Login' and then 'Forgot Password'. Enter your registered email address and we'll send you a password reset link. Click the link in the email to create a new password. The link is valid for 24 hours.",
+      "intent": "account",
+      "keywords": ["forgot password", "reset password", "password reset", "change password"]
+    },
+    {
+      "question": "How do I update my profile information?",
+      "answer": "To update your profile, log into your account and go to 'My Profile'. You can update your personal information, address, phone number, and profile picture. Changes are saved automatically. Make sure to keep your information updated for smooth order processing.",
+      "intent": "account",
+      "keywords": ["profile", "update profile", "personal information", "account settings"]
+    },
+    {
+      "question": "How do I add items to my wishlist?",
+      "answer": "To add items to your wishlist, simply click the heart icon on any product page or product card. You must be logged in to use the wishlist feature. You can view your wishlist by clicking on the heart icon in the top navigation bar.",
+      "intent": "products",
+      "keywords": ["wishlist", "favorites", "save", "heart", "bookmark"]
+    },
+    {
+      "question": "How do I contact customer support?",
+      "answer": "You can contact our customer support team through multiple channels: Email us at support@fashionforward.com, call us at +91-9876543210 (Mon-Sat, 9 AM-8 PM), or use our live chat feature on the website. We typically respond within 2-4 hours.",
+      "intent": "general",
+      "keywords": ["contact", "support", "help", "customer service", "phone", "email"]
+    },
+    {
+      "question": "What are your customer support hours?",
+      "answer": "Our customer support team is available Monday to Saturday, 9 AM to 8 PM IST. For urgent issues, you can email us at support@fashionforward.com and we'll respond within 2-4 hours. We also have a comprehensive FAQ section for quick answers.",
+      "intent": "general",
+      "keywords": ["support hours", "customer service hours", "when are you open", "business hours"]
+    },
+    {
+      "question": "Do you offer international shipping?",
+      "answer": "Currently, we only ship within India. We deliver to all major cities and towns across the country. We're working on expanding our services internationally, so stay tuned for updates on our social media channels.",
+      "intent": "shipping",
+      "keywords": ["international shipping", "overseas", "outside india", "global shipping"]
+    },
+    {
+      "question": "What is your quality guarantee?",
+      "answer": "We stand behind the quality of all our products. If you receive a defective or damaged item, we offer a full refund or replacement within 7 days. All our products go through quality checks before shipping. We source from trusted manufacturers and maintain strict quality standards.",
+      "intent": "products",
+      "keywords": ["quality", "guarantee", "warranty", "defective", "damaged", "quality check"]
+    },
+    {
+      "question": "How do I cancel my order?",
+      "answer": "You can cancel your order within 2 hours of placing it if it hasn't been processed yet. Log into your account, go to 'My Orders', find your order, and click 'Cancel Order'. For orders that have been processed, you'll need to return the item after delivery for a refund.",
+      "intent": "returns",
+      "keywords": ["cancel", "cancel order", "order cancellation", "cancel my order"]
+    },
+    {
+      "question": "Do you have a mobile app?",
+      "answer": "Yes, we have a mobile app available for both Android and iOS devices. You can download it from the Google Play Store or Apple App Store. The app offers a better shopping experience with faster loading, push notifications, and exclusive app-only deals.",
+      "intent": "general",
+      "keywords": ["mobile app", "app", "android", "ios", "download", "smartphone"]
+    },
+    {
+      "question": "How do I get updates about new products and sales?",
+      "answer": "You can stay updated by subscribing to our newsletter, following us on social media (Instagram, Facebook, Twitter), or downloading our mobile app. We send regular updates about new arrivals, sales, and exclusive offers to our subscribers.",
+      "intent": "general",
+      "keywords": ["newsletter", "updates", "notifications", "social media", "follow", "subscribe"]
+    },
+    {
+      "question": "What materials are your clothes made of?",
+      "answer": "We use high-quality materials including 100% cotton, cotton blends, polyester, viscose, and other premium fabrics. Each product page includes detailed material information. We ensure all materials are skin-friendly and comfortable for daily wear.",
+      "intent": "products",
+      "keywords": ["material", "fabric", "cotton", "polyester", "what is it made of", "fabric quality"]
+    },
+    {
+      "question": "Do you offer gift wrapping?",
+      "answer": "Yes, we offer gift wrapping services for ₹99. You can select the gift wrapping option during checkout. We use premium gift boxes and wrapping paper. You can also add a personalized message that will be included with the gift.",
+      "intent": "products",
+      "keywords": ["gift wrapping", "gift box", "gift", "present", "wrapping", "gift service"]
+    },
+    {
+      "question": "How do I check if a product is in stock?",
+      "answer": "Product availability is shown on each product page. If a product is out of stock, you'll see 'Out of Stock' instead of 'Add to Cart'. You can also sign up for stock notifications by clicking 'Notify Me When Available' on out-of-stock items.",
+      "intent": "products",
+      "keywords": ["stock", "available", "in stock", "out of stock", "availability", "notify me"]
+    },
+    {
+      "question": "What if I receive the wrong item?",
+      "answer": "If you receive the wrong item, please contact our customer support immediately at support@fashionforward.com or call +91-9876543210. We'll arrange for the correct item to be sent to you and provide a free return label for the wrong item. We apologize for any inconvenience caused.",
+      "intent": "returns",
+      "keywords": ["wrong item", "incorrect item", "mistake", "wrong product", "error"]
+    },
+    {
+      "question": "Do you have a loyalty program?",
+      "answer": "Yes, we have a Fashion Forward Rewards program! Earn points with every purchase and redeem them for discounts on future orders. You also get exclusive access to sales, early product launches, and special offers. Sign up is free and automatic when you create an account.",
+      "intent": "general",
+      "keywords": ["loyalty", "rewards", "points", "membership", "loyalty program", "rewards program"]
+    }
+  ]
+}

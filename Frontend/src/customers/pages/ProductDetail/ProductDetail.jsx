@@ -4,16 +4,13 @@ import { HeartIcon, HeartIcon as HeartSolidIcon, ShoppingBagIcon, MinusIcon, Plu
 import apiService from '../../../services/api';
 import { useCart } from '../../../contexts/CartContext';
 import { useWishlist } from '../../../contexts/WishlistContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import ReviewForm from '../../components/ReviewForm/ReviewForm';
-import ReviewList from '../../components/ReviewList/ReviewList';
 import StarRating from '../../components/StarRating/StarRating';
+import ProductReviewSection from '../../../components/Reviews/ProductReviewSection';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const { isAuthenticated } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
@@ -23,20 +20,6 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewStats, setReviewStats] = useState(null);
-
-  const fetchReviewStats = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/reviews/product/${id}?page=1&limit=1&sortBy=newest`);
-      const data = await response.json();
-      if (data.success) {
-        setReviewStats(data.data.statistics);
-      }
-    } catch (error) {
-      console.error('Error fetching review stats:', error);
-    }
-  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -64,12 +47,6 @@ const ProductDetail = () => {
 
     if (id) {
       fetchProduct();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      fetchReviewStats();
     }
   }, [id]);
 
@@ -323,11 +300,6 @@ const ProductDetail = () => {
     } finally {
       setWishlistLoading(false);
     }
-  };
-
-  const handleReviewSubmitted = () => {
-    setShowReviewForm(false);
-    fetchReviewStats(); // Refresh stats after new review
   };
 
   const renderStars = (rating) => {
@@ -606,48 +578,7 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
-            {reviewStats && (
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">
-                    {reviewStats.averageRating?.toFixed(1) || '0.0'}
-                  </div>
-                  <StarRating 
-                    rating={reviewStats.averageRating || 0} 
-                    interactive={false} 
-                    size="md"
-                  />
-                  <p className="text-sm text-gray-600 mt-1">
-                    {reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowReviewForm(true)}
-                  className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Write a Review
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Review Form */}
-          {showReviewForm && (
-            <div className="mb-8">
-              <ReviewForm 
-                productId={id}
-                onReviewSubmitted={handleReviewSubmitted}
-                onCancel={() => setShowReviewForm(false)}
-              />
-            </div>
-          )}
-
-          {/* Reviews List */}
-          <ReviewList productId={id} />
-        </div>
+        <ProductReviewSection productId={id} />
       </div>
     </div>
   );

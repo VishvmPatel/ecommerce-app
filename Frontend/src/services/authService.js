@@ -1,181 +1,117 @@
+import axios from 'axios';
+
 const API_BASE_URL = 'http://localhost:5000/api';
 
-class AuthService {
-  async fetchData(endpoint, options = {}) {
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add token to requests if available
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const authService = {
+  // Login user
+  async login(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
-        ...options
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return data;
+      const response = await api.post('/auth/login', { email, password });
+      return response.data;
     } catch (error) {
-      console.error('Auth API Error:', error);
       throw error;
     }
-  }
+  },
 
-  async register(userData) {
-    return this.fetchData('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData)
-    });
-  }
-
-  async login(email, password) {
-    return this.fetchData('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    });
-  }
-
-  async logout() {
-    const token = this.getToken();
-    if (!token) {
-      return { success: true, message: 'Already logged out' };
-    }
-
+  // Signup user
+  async signup(userData) {
     try {
-      const result = await this.fetchData('/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      this.removeToken();
-      return result;
+      const response = await api.post('/auth/signup', userData);
+      return response.data;
     } catch (error) {
-      this.removeToken();
-      return { success: true, message: 'Logged out locally' };
+      throw error;
     }
-  }
+  },
 
+  // Get current user
   async getCurrentUser() {
-    const token = this.getToken();
-    if (!token) {
-      throw new Error('No token found');
+    try {
+      const response = await api.get('/auth/me');
+      return response.data.user;
+    } catch (error) {
+      throw error;
     }
+  },
 
-    return this.fetchData('/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  }
+  // Logout user
+  async logout() {
+    try {
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 
+  // Update user profile
   async updateProfile(profileData) {
-    const token = this.getToken();
-    if (!token) {
-      throw new Error('No token found');
+    try {
+      const response = await api.put('/auth/profile', profileData);
+      return response.data;
+    } catch (error) {
+      throw error;
     }
+  },
 
-    return this.fetchData('/auth/profile', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(profileData)
-    });
-  }
-
+  // Change password
   async changePassword(currentPassword, newPassword) {
-    const token = this.getToken();
-    if (!token) {
-      throw new Error('No token found');
+    try {
+      const response = await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
     }
+  },
 
-    return this.fetchData('/auth/change-password', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
-  }
-
-  getToken() {
-    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-  }
-
-  setToken(token, rememberMe = false) {
-    if (rememberMe) {
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('rememberMe', 'true');
-    } else {
-      sessionStorage.setItem('authToken', token);
-      localStorage.removeItem('rememberMe');
-    }
-  }
-
-  removeToken() {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('authToken');
-    localStorage.removeItem('rememberMe');
-  }
-
+  // Check if user is authenticated
   isAuthenticated() {
-    const token = this.getToken();
-    if (!token) return false;
+    return !!localStorage.getItem('token');
+  },
 
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Date.now() / 1000;
-      return payload.exp > currentTime;
-    } catch (error) {
-      this.removeToken();
-      return false;
-    }
+  // Get token
+  getToken() {
+    return localStorage.getItem('token');
+  },
+
+  // Remove token
+  removeToken() {
+    localStorage.removeItem('token');
   }
-
-  getUserFromToken() {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.user;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  validatePassword(password) {
-    const minLength = password.length >= 6;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-
-    return {
-      isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers,
-      errors: {
-        minLength: !minLength ? 'Password must be at least 6 characters' : null,
-        hasUpperCase: !hasUpperCase ? 'Password must contain uppercase letter' : null,
-        hasLowerCase: !hasLowerCase ? 'Password must contain lowercase letter' : null,
-        hasNumbers: !hasNumbers ? 'Password must contain a number' : null
-      }
-    };
-  }
-
-  validatePhone(phone) {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    return phoneRegex.test(phone);
-  }
-}
-
-const authService = new AuthService();
-export default authService;
+};

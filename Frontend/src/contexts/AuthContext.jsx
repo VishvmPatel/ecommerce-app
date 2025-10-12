@@ -1,292 +1,304 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import authService from '../services/authService';
+/**
+ * Authentication Context - Fashion Store E-commerce
+ * 
+ * This context provides authentication state management for the entire application.
+ * It handles user login, logout, registration, and maintains authentication state
+ * across page reloads using localStorage.
+ * 
+ * Features:
+ * - User authentication state management
+ * - JWT token handling
+ * - Automatic authentication check on app startup
+ * - Login/logout functionality
+ * - Password reset functionality
+ * - Admin role detection
+ * - Persistent authentication across page reloads
+ * 
+ * @author Fashion Store Development Team
+ * @version 1.0.0
+ */
 
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
+
+// Create authentication context
 const AuthContext = createContext();
 
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'LOGIN_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-
-    case 'LOGIN_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        isAuthenticated: true,
-        user: action.payload.user,
-        token: action.payload.token,
-        error: null
-      };
-
-    case 'LOGIN_FAILURE':
-      return {
-        ...state,
-        loading: false,
-        isAuthenticated: false,
-        user: null,
-        token: null,
-        error: action.payload
-      };
-
-    case 'LOGOUT':
-      return {
-        ...state,
-        isAuthenticated: false,
-        user: null,
-        token: null,
-        error: null
-      };
-
-    case 'REGISTER_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-
-    case 'REGISTER_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        isAuthenticated: true,
-        user: action.payload.user,
-        token: action.payload.token,
-        error: null
-      };
-
-    case 'REGISTER_FAILURE':
-      return {
-        ...state,
-        loading: false,
-        isAuthenticated: false,
-        user: null,
-        token: null,
-        error: action.payload
-      };
-
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload }
-      };
-
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
-
-    case 'SET_LOADING':
-      return {
-        ...state,
-        loading: action.payload
-      };
-
-    default:
-      return state;
+/**
+ * Custom hook to use authentication context
+ * 
+ * This hook provides access to authentication state and methods.
+ * It ensures the hook is only used within an AuthProvider.
+ * 
+ * @returns {Object} Authentication context value
+ * @throws {Error} If used outside AuthProvider
+ */
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
+  return context;
 };
 
-const initialState = {
-  isAuthenticated: false,
-  user: null,
-  token: null,
-  loading: false,
-  error: null
-};
-
+/**
+ * Authentication Provider Component
+ * 
+ * This component provides authentication state and methods to all child components.
+ * It manages user authentication, token storage, and automatic authentication checks.
+ * 
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components
+ * @returns {JSX.Element} AuthProvider component
+ */
 export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+  // Authentication state
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  /**
+   * Check Authentication Status on App Startup
+   * 
+   * This effect runs once when the component mounts to check if the user
+   * is already authenticated (has a valid token in localStorage).
+   */
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = authService.getToken();
-      const storedUser = localStorage.getItem('user');
-      
-      if (token && authService.isAuthenticated()) {
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            dispatch({
-              type: 'LOGIN_SUCCESS',
-              payload: {
-                user: userData,
-                token: token
-              }
-            });
-            return;
-          } catch (error) {
-            console.error('Failed to parse stored user data:', error);
-          }
+    const checkAuthStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Verify token and get user data
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+          setIsAuthenticated(true);
         }
-        
-        try {
-          dispatch({ type: 'SET_LOADING', payload: true });
-          const response = await authService.getCurrentUser();
-          dispatch({
-            type: 'LOGIN_SUCCESS',
-            payload: {
-              user: response.user,
-              token: token
-            }
-          });
-        } catch (error) {
-          console.error('Token validation failed:', error);
-          authService.removeToken();
-          localStorage.removeItem('user');
-          dispatch({ type: 'LOGOUT' });
-        }
-      } else {
-        dispatch({ type: 'LOGOUT' });
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Remove invalid token
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (!state.isAuthenticated) {
-      initializeAuth();
-    }
+    checkAuthStatus();
   }, []);
 
-  const login = async (email, password, rememberMe = false) => {
+  /**
+   * Login Function
+   * 
+   * Handles user login with email and password.
+   * Stores JWT token and updates authentication state.
+   * 
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @returns {Object} Login result with success status and admin flag
+   */
+  const login = async (email, password) => {
     try {
-      dispatch({ type: 'LOGIN_START' });
-
+      setError(null);
+      setLoading(true);
+      
       const response = await authService.login(email, password);
       
-      authService.setToken(response.token, rememberMe);
-      
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: {
-          user: response.user,
-          token: response.token
-        }
-      });
-
-      return { success: true, user: response.user };
+      if (response.success) {
+        // Store token and update state
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        
+        // Check if user is admin and return admin flag
+        return { 
+          success: true, 
+          isAdmin: response.user.role === 'admin',
+          user: response.user
+        };
+      } else {
+        setError(response.message || 'Login failed');
+        return { success: false, message: response.message };
+      }
     } catch (error) {
-      const errorMessage = error.message || 'Login failed';
-      dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: errorMessage
-      });
-      return { success: false, error: errorMessage };
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const googleLogin = async (userData, token) => {
+  /**
+   * Signup Function
+   * 
+   * Handles user registration with provided user data.
+   * Stores JWT token and updates authentication state on success.
+   * 
+   * @param {Object} userData - User registration data
+   * @returns {Object} Signup result with success status
+   */
+  const signup = async (userData) => {
     try {
-      dispatch({ type: 'LOGIN_START' });
-
-      authService.setToken(token, true); // Remember Google users
+      setError(null);
+      setLoading(true);
       
-      localStorage.setItem('user', JSON.stringify(userData));
+      const response = await authService.signup(userData);
       
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: {
-          user: userData,
-          token: token
-        }
-      });
-
-      return { success: true, user: userData };
+      if (response.success) {
+        // Store token and update state
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        setError(response.message || 'Signup failed');
+        return { success: false, message: response.message };
+      }
     } catch (error) {
-      const errorMessage = error.message || 'Google login failed';
-      dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: errorMessage
-      });
-      return { success: false, error: errorMessage };
+      console.error('Signup error:', error);
+      
+      // Handle validation errors specifically
+      if (error.response?.status === 400 && error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors;
+        const errorMessages = validationErrors.map(err => err.msg).join(', ');
+        setError(errorMessages);
+        return { success: false, message: errorMessages };
+      }
+      
+      const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const register = async (userData) => {
-    try {
-      dispatch({ type: 'REGISTER_START' });
-
-      const response = await authService.register(userData);
-      
-      authService.setToken(response.token);
-      
-      dispatch({
-        type: 'REGISTER_SUCCESS',
-        payload: {
-          user: response.user,
-          token: response.token
-        }
-      });
-
-      return { success: true, user: response.user };
-    } catch (error) {
-      const errorMessage = error.message || 'Registration failed';
-      dispatch({
-        type: 'REGISTER_FAILURE',
-        payload: errorMessage
-      });
-      return { success: false, error: errorMessage };
-    }
-  };
-
+  /**
+   * Logout Function
+   * 
+   * Handles user logout by clearing token and resetting authentication state.
+   * Calls backend logout endpoint and cleans up local storage.
+   */
   const logout = async () => {
     try {
       await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('user');
-      dispatch({ type: 'LOGOUT' });
+      // Clear authentication state regardless of backend response
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(null);
     }
   };
 
+  /**
+   * Update Profile Function
+   * 
+   * Updates user profile information and refreshes user state.
+   * 
+   * @param {Object} profileData - Updated profile data
+   * @returns {Object} Update result with success status
+   */
   const updateProfile = async (profileData) => {
     try {
+      setError(null);
+      setLoading(true);
+      
       const response = await authService.updateProfile(profileData);
-      dispatch({
-        type: 'UPDATE_USER',
-        payload: response.user
-      });
-      return { success: true, user: response.user };
+      
+      if (response.success) {
+        setUser(response.user);
+        return { success: true };
+      } else {
+        setError(response.message || 'Profile update failed');
+        return { success: false, message: response.message };
+      }
     } catch (error) {
-      const errorMessage = error.message || 'Profile update failed';
-      return { success: false, error: errorMessage };
+      console.error('Profile update error:', error);
+      const errorMessage = error.response?.data?.message || 'Profile update failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
     }
   };
 
+  /**
+   * Change Password Function
+   * 
+   * Changes user password with current password verification.
+   * 
+   * @param {string} currentPassword - Current password for verification
+   * @param {string} newPassword - New password to set
+   * @returns {Object} Password change result with success status
+   */
   const changePassword = async (currentPassword, newPassword) => {
     try {
+      setError(null);
+      setLoading(true);
+      
       const response = await authService.changePassword(currentPassword, newPassword);
-      return { success: true, message: response.message };
+      
+      if (response.success) {
+        return { success: true };
+      } else {
+        setError(response.message || 'Password change failed');
+        return { success: false, message: response.message };
+      }
     } catch (error) {
-      const errorMessage = error.message || 'Password change failed';
-      return { success: false, error: errorMessage };
+      console.error('Password change error:', error);
+      const errorMessage = error.response?.data?.message || 'Password change failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
     }
   };
 
+  /**
+   * Update User Function
+   * 
+   * Manually updates user state (used for external updates).
+   * 
+   * @param {Object} userData - Updated user data
+   */
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
+  /**
+   * Clear Error Function
+   * 
+   * Clears any authentication errors.
+   */
   const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
+    setError(null);
   };
 
-  const updateUser = (updatedUser) => {
-    dispatch({
-      type: 'UPDATE_USER',
-      payload: updatedUser
-    });
-  };
-
+  /**
+   * Context Value
+   * 
+   * The value object that will be provided to all consuming components.
+   * Contains all authentication state and methods.
+   */
   const value = {
-    ...state,
+    // Authentication state
+    user,
+    isAuthenticated,
+    loading,
+    error,
+    
+    // Authentication methods
     login,
-    googleLogin,
-    register,
+    signup,
     logout,
     updateProfile,
     changePassword,
-    clearError,
-    updateUser
+    updateUser,
+    clearError
   };
 
   return (
@@ -294,12 +306,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

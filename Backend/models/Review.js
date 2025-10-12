@@ -29,73 +29,39 @@ const reviewSchema = new mongoose.Schema({
     trim: true,
     maxlength: 1000
   },
-  verifiedPurchase: {
-    type: Boolean,
-    default: false
-  },
-  helpful: {
+  helpfulCount: {
     type: Number,
     default: 0
   },
-  notHelpful: {
+  notHelpfulCount: {
     type: Number,
     default: 0
   },
-  images: [{
-    type: String, // URLs to uploaded images
-    validate: {
-      validator: function(v) {
-        return v.length <= 5; // Max 5 images per review
-      },
-      message: 'Maximum 5 images allowed per review'
-    }
-  }],
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'approved'
-  },
-  moderationNotes: {
-    type: String,
-    trim: true
   }
 }, {
   timestamps: true
 });
 
+// Indexes
 reviewSchema.index({ product: 1, createdAt: -1 });
-reviewSchema.index({ user: 1, createdAt: -1 });
+reviewSchema.index({ user: 1 });
 reviewSchema.index({ rating: 1 });
-reviewSchema.index({ status: 1 });
 
-reviewSchema.virtual('helpfulnessScore').get(function() {
-  const total = this.helpful + this.notHelpful;
-  return total > 0 ? (this.helpful / total) * 100 : 0;
-});
-
-reviewSchema.index({ product: 1, user: 1 }, { unique: true });
-
-reviewSchema.pre('save', function(next) {
-  if (this.rating < 1 || this.rating > 5) {
-    next(new Error('Rating must be between 1 and 5'));
-  } else {
-    next();
-  }
-});
-
-reviewSchema.statics.getAverageRating = function(productId) {
-  return this.aggregate([
+// Static method to get average rating for a product
+reviewSchema.statics.getAverageRating = async function(productId) {
+  const result = await this.aggregate([
     { $match: { product: new mongoose.Types.ObjectId(productId), status: 'approved' } },
     { $group: { _id: null, averageRating: { $avg: '$rating' }, totalReviews: { $sum: 1 } } }
   ]);
-};
-
-reviewSchema.statics.getRatingDistribution = function(productId) {
-  return this.aggregate([
-    { $match: { product: new mongoose.Types.ObjectId(productId), status: 'approved' } },
-    { $group: { _id: '$rating', count: { $sum: 1 } } },
-    { $sort: { _id: -1 } }
-  ]);
+  
+  return result.length > 0 ? {
+    averageRating: Math.round(result[0].averageRating * 10) / 10,
+    totalReviews: result[0].totalReviews
+  } : { averageRating: 0, totalReviews: 0 };
 };
 
 module.exports = mongoose.model('Review', reviewSchema);

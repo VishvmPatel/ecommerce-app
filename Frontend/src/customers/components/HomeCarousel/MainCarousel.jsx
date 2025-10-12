@@ -114,7 +114,7 @@ const MainCarousel = () => {
           />
         )}
       />
-      <style jsx>{`
+      <style>{`
         .alice-carousel__dots {
           margin-top: -60px !important;
           z-index: 10;

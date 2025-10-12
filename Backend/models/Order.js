@@ -1,208 +1,188 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
+const OrderItemSchema = new mongoose.Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  image: {
+    type: String,
+    required: false,
+    default: '/images/default-product.jpg'
+  },
+  size: {
+    type: String,
+    default: null
+  },
+  color: {
+    type: String,
+    default: null
+  }
+});
+
+const OrderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
-    unique: true,
-    required: false
+    required: false,
+    unique: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  items: [{
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-      required: true
-    },
-    quantity: {
-      type: Number,
-      required: true,
-      min: [1, 'Quantity must be at least 1']
-    },
-    size: String,
-    color: String,
-    price: {
-      type: Number,
-      required: true
-    },
-    originalPrice: Number
-  }],
+  items: [OrderItemSchema],
   shippingAddress: {
-    type: {
-      type: String,
-      enum: ['home', 'work', 'other'],
-      default: 'home'
-    },
-    street: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    city: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    state: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    postalCode: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    country: {
-      type: String,
-      required: true,
-      trim: true,
-      default: 'India'
-    },
-    phone: String
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    zipCode: { type: String, required: true },
+    country: { type: String, required: true }
   },
   billingAddress: {
-    type: {
-      type: String,
-      enum: ['home', 'work', 'other'],
-      default: 'home'
-    },
-    street: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    city: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    state: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    postalCode: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    country: {
-      type: String,
-      required: true,
-      trim: true,
-      default: 'India'
-    },
-    phone: String
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    zipCode: { type: String, required: true },
+    country: { type: String, required: true }
   },
-  payment: {
-    method: {
-      type: String,
-      enum: ['credit_card', 'debit_card', 'upi', 'net_banking', 'cod', 'wallet'],
-      required: true
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
-      default: 'pending'
-    },
-    transactionId: String,
-    paidAt: Date,
-    refundedAt: Date
-  },
-  pricing: {
-    subtotal: {
-      type: Number,
-      required: true
-    },
-    shipping: {
-      type: Number,
-      default: 0
-    },
-    tax: {
-      type: Number,
-      default: 0
-    },
-    discount: {
-      type: Number,
-      default: 0
-    },
-    total: {
-      type: Number,
-      required: true
-    }
-  },
-  status: {
+  paymentMethod: {
     type: String,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
+    enum: ['card', 'upi', 'cod'],
+    required: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
     default: 'pending'
   },
-  tracking: {
-    carrier: String,
-    trackingNumber: String,
-    trackingUrl: String,
-    estimatedDelivery: Date
+  orderStatus: {
+    type: String,
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending'
   },
-  notes: {
-    customer: String,
-    admin: String
+  subtotal: {
+    type: Number,
+    required: true
   },
-  timeline: [{
-    status: {
-      type: String,
-      required: true
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now
-    },
-    note: String
-  }]
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  shipping: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  tax: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  total: {
+    type: Number,
+    required: true
+  },
+  orderNotes: {
+    type: String,
+    default: ''
+  },
+  trackingNumber: {
+    type: String,
+    default: null
+  },
+  estimatedDelivery: {
+    type: Date,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-orderSchema.virtual('statusDisplay').get(function() {
-  const statusMap = {
-    'pending': 'Order Placed',
-    'confirmed': 'Order Confirmed',
-    'processing': 'Processing',
-    'shipped': 'Shipped',
-    'delivered': 'Delivered',
-    'cancelled': 'Cancelled',
-    'returned': 'Returned'
+// Index for efficient queries
+OrderSchema.index({ user: 1, createdAt: -1 });
+OrderSchema.index({ orderNumber: 1 });
+OrderSchema.index({ orderStatus: 1 });
+
+// Pre-save middleware to generate order number and update timestamps
+OrderSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    // Generate unique order number
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    this.orderNumber = `ORD${year}${month}${day}${random}`;
+  }
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Instance method to get order summary
+OrderSchema.methods.getOrderSummary = function() {
+  return {
+    orderNumber: this.orderNumber,
+    total: this.total,
+    status: this.orderStatus,
+    itemCount: this.items.reduce((sum, item) => sum + item.quantity, 0),
+    createdAt: this.createdAt
   };
-  return statusMap[this.status] || this.status;
-});
+};
 
-orderSchema.index({ user: 1 });
-orderSchema.index({ status: 1 });
-orderSchema.index({ createdAt: -1 });
-orderSchema.index({ 'payment.status': 1 });
+// Instance method to get shipping address as string
+OrderSchema.methods.getShippingAddressString = function() {
+  const addr = this.shippingAddress;
+  return `${addr.address}, ${addr.city}, ${addr.state} ${addr.zipCode}, ${addr.country}`;
+};
 
-orderSchema.pre('save', function(next) {
-  if (!this.orderNumber || this.orderNumber === '') {
-    const timestamp = Date.now().toString();
-    const random = Math.random().toString(36).substr(2, 5).toUpperCase();
-    this.orderNumber = `FS${timestamp.slice(-6)}${random}`;
-  }
-  next();
-});
+// Instance method to get billing address as string
+OrderSchema.methods.getBillingAddressString = function() {
+  const addr = this.billingAddress;
+  return `${addr.address}, ${addr.city}, ${addr.state} ${addr.zipCode}, ${addr.country}`;
+};
 
-orderSchema.pre('save', function(next) {
-  if (this.isModified('status')) {
-    this.timeline.push({
-      status: this.status,
-      timestamp: new Date(),
-      note: `Order status changed to ${this.statusDisplay}`
-    });
-  }
-  next();
-});
+// Static method to get order statistics
+OrderSchema.statics.getOrderStats = async function(userId) {
+  const stats = await this.aggregate([
+    { $match: { user: mongoose.Types.ObjectId(userId) } },
+    {
+      $group: {
+        _id: null,
+        totalOrders: { $sum: 1 },
+        totalSpent: { $sum: '$total' },
+        averageOrderValue: { $avg: '$total' }
+      }
+    }
+  ]);
+  
+  return stats[0] || { totalOrders: 0, totalSpent: 0, averageOrderValue: 0 };
+};
 
-module.exports = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', OrderSchema);
+
+module.exports = Order;

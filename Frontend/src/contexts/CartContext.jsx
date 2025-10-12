@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from './ToastContext';
 
 const CartContext = createContext();
 
@@ -67,6 +69,8 @@ const initialState = {
 
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { showCartSuccess, showCartRemoved } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
@@ -86,10 +90,30 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product) => {
     dispatch({ type: 'ADD_TO_CART', payload: product });
+    
+    // Show success toast
+    const productName = product.name || 'Product';
+    showCartSuccess(productName, {
+      action: (
+        <button 
+          onClick={() => navigate('/cart')}
+          className="text-purple-600 hover:text-purple-700 font-medium underline"
+        >
+          View Cart
+        </button>
+      )
+    });
   };
 
   const removeFromCart = (cartItemId) => {
+    // Get product name before removing
+    const item = state.items.find(item => item.cartItemId === cartItemId);
+    const productName = item?.name || 'Product';
+    
     dispatch({ type: 'REMOVE_FROM_CART', payload: { cartItemId } });
+    
+    // Show removal toast
+    showCartRemoved(productName);
   };
 
   const updateQuantity = (cartItemId, quantity) => {
@@ -136,7 +160,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartGrandTotal = () => {
-    return getCartSubtotal() + getCartTax() + getCartShipping() - getCartDiscount();
+    return getCartSubtotal() + getCartTax() + getCartShipping();
   };
 
   const value = {

@@ -93,7 +93,7 @@ class CartService {
 
     const tax = subtotal * 0.18; // 18% GST
     const shipping = subtotal > 2000 ? 0 : 100; // Free shipping above ₹2000
-    const grandTotal = subtotal + tax + shipping - discount;
+    const grandTotal = subtotal + tax + shipping;
 
     return {
       subtotal: subtotal,

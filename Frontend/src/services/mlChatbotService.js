@@ -123,7 +123,7 @@ class MLChatbotService {
     
     if (lowerMessage.includes('account') || lowerMessage.includes('login')) {
       return {
-        message: "You can manage your account by clicking on your profile icon. You can view orders, update information, and manage settings. For login issues, try resetting your password or use Google sign-in for faster access.",
+        message: "You can manage your account by clicking on your profile icon. You can view orders, update information, and manage settings. For login issues, try resetting your password.",
         intent: "account",
         suggestedActions: ["My Account", "Reset Password", "Contact Support"]
       };

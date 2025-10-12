@@ -130,7 +130,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartGrandTotal = () => {
-    return getCartSubtotal() + getCartTax() + getCartShipping() - getCartDiscount();
+    return getCartSubtotal() + getCartTax() + getCartShipping();
   };
 
   const value = {

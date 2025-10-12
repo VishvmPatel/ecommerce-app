@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState, useRef, useEffect } from 'react'
+import { Fragment, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Dialog,
@@ -10,11 +10,12 @@ import {
   PopoverButton,
   PopoverPanel,
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, UserIcon, ChevronDownIcon, HeartIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, UserIcon, ChevronDownIcon, HeartIcon, ClipboardDocumentListIcon, Cog6ToothIcon, QuestionMarkCircleIcon, BellIcon, MapPinIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 import CountrySelector from '../CountrySelector/CountrySelector'
 import { useCart } from '../../../contexts/CartContext'
 import { useAuth } from '../../../contexts/AuthContext'
+import ProfileImage from '../../../components/ProfileImage/ProfileImage'
 
 const navigation = {
   categories: [
@@ -58,24 +59,10 @@ const navigation = {
 export default function Navigation() {
   const navigate = useNavigate()
   const { getCartItemsCount } = useCart()
-  const { isAuthenticated, user, logout } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const [open, setOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const profileRef = useRef(null)
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setProfileOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -87,8 +74,11 @@ export default function Navigation() {
 
   const handleLogout = async () => {
     await logout()
-    setProfileOpen(false)
     navigate('/')
+  }
+
+  const closeDropdown = () => {
+    setProfileOpen(false)
   }
 
   return (
@@ -136,16 +126,46 @@ export default function Navigation() {
             </div>
 
             <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              <div className="flow-root">
-                <Link to="/login" className="-m-2 block p-2 font-medium text-gray-900">
-                  Sign in
-                </Link>
-              </div>
-              <div className="flow-root">
-                <Link to="/signup" className="-m-2 block p-2 font-medium text-gray-900">
-                  Create account
-                </Link>
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <div className="flow-root">
+                    <Link to="/profile" className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200">
+                      My Profile
+                    </Link>
+                  </div>
+                  <div className="flow-root">
+                    <Link to="/orders" className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200">
+                      My Orders
+                    </Link>
+                  </div>
+                  <div className="flow-root">
+                    <Link to="/wishlist" className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200">
+                      Wishlist
+                    </Link>
+                  </div>
+                  <div className="flow-root">
+                    <button
+                      onClick={handleLogout}
+                      className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200 w-full text-left"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flow-root">
+                    <Link to="/login" className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200">
+                      Sign In
+                    </Link>
+                  </div>
+                  <div className="flow-root">
+                    <Link to="/signup" className="-m-2 block p-2 font-medium text-gray-900 hover:text-purple-600 transition-colors duration-200">
+                      Create Account
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="border-t border-gray-200 px-4 py-6">
@@ -249,103 +269,149 @@ export default function Navigation() {
                     <span className="sr-only">items in cart, view bag</span>
                   </Link>
 
-                  <CountrySelector />
-
-                  <div className="relative" ref={profileRef}>
-                    <button
-                      onClick={() => setProfileOpen(!profileOpen)}
-                      className="flex items-center space-x-2 p-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-300"
-                    >
-                      <UserIcon className="size-6" />
-                      <ChevronDownIcon className="size-4" />
-                    </button>
-
-                    {profileOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        {!isAuthenticated ? (
-                          <>
-                            <Link
-                              to="/login"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              Sign In
-                            </Link>
-                            <Link
-                              to="/signup"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              Create Account
-                            </Link>
-                            <div className="border-t border-gray-200 my-2"></div>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
-                              Track Order
-                            </a>
-                            <Link to="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
-                              Help & Support
-                            </Link>
-                          </>
-                        ) : (
-                          <>
-                            <div className="px-4 py-2 border-b border-gray-200">
-                              <p className="text-sm font-medium text-gray-900">
-                                Welcome back!
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {user?.firstName} {user?.lastName}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {user?.email}
-                              </p>
+                  {isAuthenticated ? (
+                    <Popover className="relative">
+                      {({ close }) => (
+                        <>
+                          <PopoverButton className="group -m-2 flex items-center p-2 hover:bg-purple-50 rounded-lg transition-all duration-300 hover:shadow-md">
+                        <div className="relative">
+                          <ProfileImage 
+                            src={user?.profilePicture} 
+                            alt={`${user?.firstName} ${user?.lastName}`}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                            fallbackClassName="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center"
+                          />
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div className="ml-3 text-left">
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-purple-600 transition-colors duration-300">
+                            {user?.firstName}
+                          </p>
+                          <p className="text-xs text-gray-500">My Account</p>
+                        </div>
+                        <ChevronDownIcon className="ml-2 w-4 h-4 text-gray-400 group-hover:text-purple-600 transition-colors duration-300" />
+                      </PopoverButton>
+                      <PopoverPanel className="absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
+                        {/* User Info Header */}
+                        <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                          <div className="flex items-center space-x-3">
+                            <ProfileImage 
+                              src={user?.profilePicture} 
+                              alt={`${user?.firstName} ${user?.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                              fallbackClassName="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center"
+                            />
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{user?.firstName} {user?.lastName}</p>
+                              <p className="text-sm text-gray-500">{user?.email}</p>
                             </div>
-                            <Link
-                              to="/profile"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              <UserIcon className="size-4 mr-3" />
-                              My Profile
-                            </Link>
-                            <Link
-                              to="/orders"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              <ClipboardDocumentListIcon className="size-4 mr-3" />
-                              My Orders
-                            </Link>
-                            <Link
-                              to="/addresses"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              <UserIcon className="size-4 mr-3" />
-                              My Addresses
-                            </Link>
-                            <Link
-                              to="/wishlist"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200"
-                              onClick={() => setProfileOpen(false)}
-                            >
-                              <HeartIcon className="size-4 mr-3" />
-                              My Wishlist
-                            </Link>
-                            <div className="border-t border-gray-200 my-2"></div>
-                            <Link to="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
-                              Help & Support
-                            </Link>
-                            <button
-                              onClick={handleLogout}
-                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
-                            >
-                              Sign Out
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          </div>
+                        </div>
+                        
+                        {/* Account Section */}
+                        <div className="py-2">
+                          <div className="px-3 py-1">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</p>
+                          </div>
+                          <Link to="/my-profile" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                            <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                            My Profile
+                          </Link>
+                 <Link to="/my-orders" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <ClipboardDocumentListIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   My Orders
+                 </Link>
+                 <Link to="/wishlist" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <HeartIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   Wishlist
+                 </Link>
+                 <Link to="/my-addresses" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <MapPinIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   My Addresses
+                 </Link>
+                        </div>
+
+                        {/* Support Section */}
+                        <div className="py-2 border-t border-gray-100">
+                          <div className="px-3 py-1">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Support</p>
+                          </div>
+                 <Link to="/help-support" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <QuestionMarkCircleIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   Help & Support
+                 </Link>
+                 <Link to="/settings" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <Cog6ToothIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   Settings
+                 </Link>
+                        </div>
+
+                        {/* Sign Out */}
+                        <div className="py-2 border-t border-gray-100">
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
+                          >
+                            <XMarkIcon className="w-4 h-4 mr-3" />
+                            Sign Out
+                          </button>
+                        </div>
+                      </PopoverPanel>
+                        </>
+                      )}
+                    </Popover>
+                  ) : (
+                    <Popover className="relative">
+                      {({ close }) => (
+                        <>
+                          <PopoverButton className="group -m-2 flex items-center p-2 hover:bg-purple-50 rounded-lg transition-all duration-300 hover:shadow-md">
+                            <div className="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
+                              <UserIcon className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="ml-3 text-left">
+                              <p className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors duration-300">
+                                Guest
+                              </p>
+                              <p className="text-xs text-gray-500">Sign in</p>
+                            </div>
+                            <ChevronDownIcon className="ml-2 w-4 h-4 text-gray-400 group-hover:text-purple-600 transition-colors duration-300" />
+                          </PopoverButton>
+                          <PopoverPanel className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
+                        {/* Guest Section */}
+                        <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                          <p className="text-sm font-semibold text-gray-900">Welcome to Fashion Forward</p>
+                          <p className="text-sm text-gray-500">Sign in to access your account</p>
+                        </div>
+                        
+                        {/* Auth Actions */}
+                        <div className="py-2">
+                          <Link to="/login" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                            <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                            Sign In
+                          </Link>
+                          <Link to="/signup" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                            <UserIcon className="w-4 h-4 mr-3 text-gray-400" />
+                            Create Account
+                          </Link>
+                        </div>
+
+                        {/* Support Section */}
+                        <div className="py-2 border-t border-gray-100">
+                          <div className="px-3 py-1">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Support</p>
+                          </div>
+                 <Link to="/help-support" onClick={close} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200">
+                   <QuestionMarkCircleIcon className="w-4 h-4 mr-3 text-gray-400" />
+                   Help & Support
+                 </Link>
+                        </div>
+                      </PopoverPanel>
+                        </>
+                      )}
+                    </Popover>
+                  )}
+
+                  <CountrySelector />
                 </div>
               </div>
             </div>

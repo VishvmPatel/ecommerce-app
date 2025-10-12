@@ -1,5 +1,43 @@
 {
-  "dependencies": {
-    "dotenv": "^17.2.3"
-  }
+  "name": "fashion-store-ecommerce",
+  "version": "1.0.0",
+  "description": "A comprehensive full-stack e-commerce application with React.js frontend and Node.js backend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd Backend && npm start",
+    "client": "cd Frontend && npm run dev",
+    "build": "cd Frontend && npm run build",
+    "install-all": "npm install && cd Backend && npm install && cd ../Frontend && npm install",
+    "seed": "cd Backend && node scripts/seed.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "ecommerce",
+    "react",
+    "nodejs",
+    "mongodb",
+    "fashion",
+    "shopping",
+    "admin-panel",
+    "payment-gateway",
+    "ai-chatbot"
+  ],
+  "author": "Fashion Store Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/fashion-store-ecommerce.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/fashion-store-ecommerce/issues"
+  },
+  "homepage": "https://github.com/your-username/fashion-store-ecommerce#readme"
 }

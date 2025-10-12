@@ -10,13 +10,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
+    "@stripe/react-stripe-js": "^5.2.0",
+    "@stripe/stripe-js": "^8.0.0",
+    "date-fns": "^4.1.0",
+    "google-auth-library": "^10.4.0",
+    "razorpay": "^2.9.6",
     "react": "^19.1.1",
     "react-alice-carousel": "^2.9.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "stripe": "^19.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

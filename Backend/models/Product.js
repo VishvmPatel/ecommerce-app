@@ -74,10 +74,6 @@ const productSchema = new mongoose.Schema({
     max: [5, 'Rating cannot exceed 5']
   },
   reviews: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
     rating: {
       type: Number,
       required: true,
@@ -177,6 +173,10 @@ productSchema.pre('save', function(next) {
 
 productSchema.pre('save', function(next) {
   this.reviewCount = this.reviews.length;
+  
+  // Automatically set inStock based on stockQuantity
+  this.inStock = this.stockQuantity > 0;
+  
   next();
 });
 

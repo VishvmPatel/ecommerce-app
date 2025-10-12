@@ -2,7 +2,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 class ApiService {
   getAuthToken() {
-    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token') || sessionStorage.getItem('authToken');
   }
 
   async fetchData(endpoint, options = {}) {
@@ -14,8 +14,28 @@ class ApiService {
         ...options.headers
       };
 
+      // Skip authentication for certain public endpoints
+      const publicEndpoints = [
+        '/auth/login',
+        '/auth/signup',
+        '/auth/forgot-password',
+        '/auth/verify-otp',
+        '/auth/reset-password',
+        '/auth/google',
+        '/auth/google/config',
+        '/products',
+        '/products/search',
+        '/products/categories'
+      ];
+
+      const isPublicEndpoint = publicEndpoints.some(publicEndpoint => 
+        endpoint.startsWith(publicEndpoint)
+      );
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      } else if (!isPublicEndpoint) {
+        console.warn('No authentication token found for request to:', endpoint);
       }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -101,31 +121,64 @@ class ApiService {
     });
   }
 
-  async updateUserProfile(profileData, token) {
+  async updateUserProfile(profileData) {
     return this.fetchData('/users/profile', {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
       body: JSON.stringify(profileData)
     });
   }
 
-  async addToWishlist(productId, token) {
-    return this.fetchData(`/users/wishlist/${productId}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  async changePassword(passwordData) {
+    return this.fetchData('/users/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData)
     });
   }
 
-  async removeFromWishlist(productId, token) {
+  async getSystemStatus() {
+    return this.fetchData('/admin/system-status');
+  }
+
+  async forgotPassword(email) {
+    return this.fetchData('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  async verifyOTP(email, otp) {
+    return this.fetchData('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  }
+
+  async resetPassword(email, otp, password) {
+    return this.fetchData('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, password })
+    });
+  }
+
+  async addToWishlist(productId) {
     return this.fetchData(`/users/wishlist/${productId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      method: 'POST'
+    });
+  }
+
+  async removeFromWishlist(productId) {
+    return this.fetchData(`/users/wishlist/${productId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getWishlist() {
+    return this.fetchData('/users/wishlist');
+  }
+
+  async clearWishlist() {
+    return this.fetchData('/users/wishlist', {
+      method: 'DELETE'
     });
   }
 
@@ -141,6 +194,10 @@ class ApiService {
     return this.fetchData(`/orders${queryString ? `?${queryString}` : ''}`);
   }
 
+  async getUserOrders() {
+    return this.fetchData('/orders/my-orders');
+  }
+
   async getOrder(orderId) {
     return this.fetchData(`/orders/${orderId}`);
   }
@@ -152,8 +209,17 @@ class ApiService {
     });
   }
 
+  // Address Management
   async getAddresses() {
     return this.fetchData('/addresses');
+  }
+
+  async getUserAddresses() {
+    return this.fetchData('/addresses');
+  }
+
+  async getDefaultAddress() {
+    return this.fetchData('/addresses/default');
   }
 
   async addAddress(addressData) {
@@ -182,6 +248,39 @@ class ApiService {
     });
   }
 
+  // Order Management
+  async getOrders(page = 1, limit = 10) {
+    return this.fetchData(`/orders?page=${page}&limit=${limit}`);
+  }
+
+  async getOrder(orderId) {
+    return this.fetchData(`/orders/${orderId}`);
+  }
+
+  async createOrder(orderData) {
+    return this.fetchData('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  }
+
+  async updateOrderStatus(orderId, statusData) {
+    return this.fetchData(`/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(statusData)
+    });
+  }
+
+  async cancelOrder(orderId) {
+    return this.fetchData(`/orders/${orderId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getOrderStats() {
+    return this.fetchData('/orders/stats/summary');
+  }
+
   async get(endpoint, options = {}) {
     return this.fetchData(endpoint, { method: 'GET', ...options });
   }
@@ -208,6 +307,57 @@ class ApiService {
 
   async healthCheck() {
     return this.fetchData('/health');
+  }
+
+  // Payment methods
+  async createPaymentIntent(data) {
+    return this.post('/payments/create-payment-intent', data);
+  }
+
+  async confirmPayment(data) {
+    return this.post('/payments/confirm-payment', data);
+  }
+
+  async getMyPayments(page = 1, limit = 10) {
+    return this.fetchData(`/payments/my-payments?page=${page}&limit=${limit}`);
+  }
+
+  async getPaymentDetails(paymentId) {
+    return this.fetchData(`/payments/${paymentId}`);
+  }
+
+  // Review Management
+  async submitReview(reviewData) {
+    return this.fetchData('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
+  }
+
+  async getProductReviews(productId, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.fetchData(`/reviews/product/${productId}${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getUserReviews() {
+    return this.fetchData('/reviews/my-reviews');
+  }
+
+  async markReviewHelpful(reviewId, isHelpful) {
+    return this.fetchData(`/reviews/${reviewId}/helpful`, {
+      method: 'POST',
+      body: JSON.stringify({ helpful: isHelpful })
+    });
+  }
+
+  async deleteReview(reviewId) {
+    return this.fetchData(`/reviews/${reviewId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getReviewStats(productId) {
+    return this.fetchData(`/reviews/product/${productId}/stats`);
   }
 }
 

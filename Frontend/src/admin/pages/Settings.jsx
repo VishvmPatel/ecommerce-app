@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAdmin } from '../contexts/AdminContext';
+import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/api';
 import { 
   CogIcon,
   BellIcon,
@@ -7,11 +8,15 @@ import {
   KeyIcon,
   GlobeAltIcon,
   DocumentTextIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Settings = () => {
-  const { admin } = useAdmin();
+  const { user } = useAuth();
   const [settings, setSettings] = useState({
     notifications: {
       email: true,
@@ -30,6 +35,24 @@ const Settings = () => {
     }
   });
 
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [systemStatus, setSystemStatus] = useState({
+    database: 'checking',
+    email: 'checking',
+    storage: 'checking'
+  });
+
   const handleSettingChange = (category, key, value) => {
     setSettings(prev => ({
       ...prev,
@@ -44,6 +67,78 @@ const Settings = () => {
     console.log('Saving settings:', settings);
     alert('Settings saved successfully!');
   };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordMessage('');
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage('New passwords do not match');
+      setPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage('New password must be at least 6 characters long');
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await apiService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+
+      if (response.success) {
+        setPasswordMessage('Password changed successfully!');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        setPasswordMessage(response.message || 'Failed to change password');
+      }
+    } catch (error) {
+      setPasswordMessage('Error changing password. Please try again.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const checkSystemStatus = async () => {
+    try {
+      // Check database connection
+      const response = await apiService.getSystemStatus();
+      
+      if (response.success && response.data) {
+        setSystemStatus({
+          database: response.data.database,
+          email: response.data.email,
+          storage: response.data.storage
+        });
+      } else {
+        setSystemStatus({
+          database: 'offline',
+          email: 'offline',
+          storage: 'offline'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking system status:', error);
+      setSystemStatus({
+        database: 'offline',
+        email: 'offline',
+        storage: 'offline'
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    checkSystemStatus();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -201,6 +296,101 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Password Change */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center mb-4">
+              <KeyIcon className="h-6 w-6 text-gray-400 mr-3" />
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Change Password
+              </h3>
+            </div>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Current Password</label>
+                <div className="mt-1 relative">
+                  <input
+                    type={showPasswords.current ? 'text' : 'password'}
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    className="block w-full pr-10 border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                  >
+                    {showPasswords.current ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <div className="mt-1 relative">
+                  <input
+                    type={showPasswords.new ? 'text' : 'password'}
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                    className="block w-full pr-10 border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                  >
+                    {showPasswords.new ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                <div className="mt-1 relative">
+                  <input
+                    type={showPasswords.confirm ? 'text' : 'password'}
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="block w-full pr-10 border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                  >
+                    {showPasswords.confirm ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              {passwordMessage && (
+                <div className={`text-sm ${passwordMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                  {passwordMessage}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+              >
+                {passwordLoading ? 'Changing...' : 'Change Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+
         {/* General */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -287,19 +477,104 @@ const Settings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700">Admin User</label>
-                <p className="text-sm text-gray-900">{admin?.firstName} {admin?.lastName}</p>
+                <p className="text-sm text-gray-900">{user?.firstName} {user?.lastName}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Email</label>
-                <p className="text-sm text-gray-900">{admin?.email}</p>
+                <p className="text-sm text-gray-900">{user?.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Role</label>
-                <p className="text-sm text-gray-900">{admin?.role}</p>
+                <p className="text-sm text-gray-900">{user?.role}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Last Login</label>
                 <p className="text-sm text-gray-900">Recently</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* System Status */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <GlobeAltIcon className="h-6 w-6 text-gray-400 mr-3" />
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  System Status
+                </h3>
+              </div>
+              <button
+                onClick={checkSystemStatus}
+                className="text-sm text-purple-600 hover:text-purple-800"
+              >
+                Refresh Status
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  {systemStatus.database === 'online' ? (
+                    <CheckCircleIcon className="h-6 w-6 text-green-500" />
+                  ) : systemStatus.database === 'offline' ? (
+                    <XCircleIcon className="h-6 w-6 text-red-500" />
+                  ) : (
+                    <div className="h-6 w-6 bg-gray-300 rounded-full animate-pulse" />
+                  )}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Database</p>
+                  <p className={`text-sm ${
+                    systemStatus.database === 'online' ? 'text-green-600' : 
+                    systemStatus.database === 'offline' ? 'text-red-600' : 'text-gray-500'
+                  }`}>
+                    {systemStatus.database === 'online' ? 'Online' : 
+                     systemStatus.database === 'offline' ? 'Offline' : 'Checking...'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  {systemStatus.email === 'online' ? (
+                    <CheckCircleIcon className="h-6 w-6 text-green-500" />
+                  ) : systemStatus.email === 'offline' ? (
+                    <XCircleIcon className="h-6 w-6 text-red-500" />
+                  ) : (
+                    <div className="h-6 w-6 bg-gray-300 rounded-full animate-pulse" />
+                  )}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Email Service</p>
+                  <p className={`text-sm ${
+                    systemStatus.email === 'online' ? 'text-green-600' : 
+                    systemStatus.email === 'offline' ? 'text-red-600' : 'text-gray-500'
+                  }`}>
+                    {systemStatus.email === 'online' ? 'Online' : 
+                     systemStatus.email === 'offline' ? 'Offline' : 'Checking...'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  {systemStatus.storage === 'online' ? (
+                    <CheckCircleIcon className="h-6 w-6 text-green-500" />
+                  ) : systemStatus.storage === 'offline' ? (
+                    <XCircleIcon className="h-6 w-6 text-red-500" />
+                  ) : (
+                    <div className="h-6 w-6 bg-gray-300 rounded-full animate-pulse" />
+                  )}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">File Storage</p>
+                  <p className={`text-sm ${
+                    systemStatus.storage === 'online' ? 'text-green-600' : 
+                    systemStatus.storage === 'offline' ? 'text-red-600' : 'text-gray-500'
+                  }`}>
+                    {systemStatus.storage === 'online' ? 'Online' : 
+                     systemStatus.storage === 'offline' ? 'Offline' : 'Checking...'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
