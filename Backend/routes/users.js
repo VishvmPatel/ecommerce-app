@@ -357,3 +357,4 @@ router.delete('/wishlist', auth, async (req, res) => {
 
 module.exports = router;
 
+

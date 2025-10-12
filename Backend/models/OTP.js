@@ -74,3 +74,4 @@ otpSchema.statics.findValidOTP = function(email, otp) {
 
 module.exports = mongoose.model('OTP', otpSchema);
 
+
