@@ -246,6 +246,19 @@ const LoginPage = () => {
               Privacy Policy
             </Link>
           </p>
+          
+          {/* Admin Access Note */}
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-xs text-gray-600 mb-1">
+              <strong>Admin Access:</strong> Need to access admin features?
+            </p>
+            <Link 
+              to="/admin" 
+              className="text-xs text-purple-600 hover:text-purple-500 font-medium"
+            >
+              Go to Admin Login →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

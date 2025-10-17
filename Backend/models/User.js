@@ -1,7 +1,7 @@
 /**
- * User Model - Fashion Store E-commerce
+ * User Model - Fashion Forward E-commerce
  * 
- * This model defines the user schema for the Fashion Store application.
+ * This model defines the user schema for the Fashion Forward application.
  * It handles user authentication, profile management, and account security.
  * 
  * Features:
@@ -12,7 +12,7 @@
  * - Role-based access control (user, customer, admin)
  * - Google OAuth integration support
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 

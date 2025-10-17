@@ -1,6 +1,6 @@
-# Deployment Guide - Fashion Store E-commerce
+# Deployment Guide - Fashion Forward E-commerce
 
-This guide provides step-by-step instructions for deploying the Fashion Store e-commerce application to production.
+This guide provides step-by-step instructions for deploying the Fashion Forward e-commerce application to production.
 
 ## 🚀 Deployment Options
 

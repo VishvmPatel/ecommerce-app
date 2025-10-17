@@ -1,7 +1,7 @@
 /**
- * Fashion Store E-commerce - Main App Component
+ * Fashion Forward E-commerce - Main App Component
  * 
- * This is the root component of the Fashion Store React application.
+ * This is the root component of the Fashion Forward React application.
  * It sets up the application structure with all necessary providers
  * and routing configuration.
  * 
@@ -13,7 +13,7 @@
  * - Shopping cart and wishlist functionality
  * - Address management
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 

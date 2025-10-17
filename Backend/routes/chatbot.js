@@ -1,5 +1,5 @@
 /**
- * Chatbot Routes - Fashion Store E-commerce
+ * Chatbot Routes - Fashion Forward E-commerce
  * 
  * This file handles all chatbot-related API endpoints including
  * message processing, feedback collection, and analytics.
@@ -10,7 +10,7 @@
  * - Analytics and conversation tracking
  * - Knowledge base management
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 

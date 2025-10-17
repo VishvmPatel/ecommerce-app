@@ -25,7 +25,11 @@ class ApiService {
         '/auth/google/config',
         '/products',
         '/products/search',
-        '/products/categories'
+        '/products/categories',
+        '/products/featured/items',
+        '/products/new/items',
+        '/products/sale/items',
+        '/products/filters/options'
       ];
 
       const isPublicEndpoint = publicEndpoints.some(publicEndpoint => 

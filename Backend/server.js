@@ -1,7 +1,7 @@
 /**
- * Fashion Store E-commerce Backend Server
+ * Fashion Forward E-commerce Backend Server
  * 
- * This is the main server file for the Fashion Store e-commerce application.
+ * This is the main server file for the Fashion Forward e-commerce application.
  * It sets up Express.js server with MongoDB connection, Socket.IO for real-time features,
  * and all necessary middleware and routes.
  * 
@@ -13,7 +13,7 @@
  * - File upload handling for product images
  * - Comprehensive error handling and logging
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 
@@ -172,7 +172,7 @@ app.get('/api/test-payment', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Fashion Store API is running!',
+    message: 'Fashion Forward API is running!',
     timestamp: new Date().toISOString()
   });
 });

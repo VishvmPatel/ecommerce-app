@@ -1,5 +1,5 @@
 /**
- * Enhanced AI Chatbot Service - Fashion Store E-commerce
+ * Enhanced AI Chatbot Service - Fashion Forward E-commerce
  * 
  * This service provides AI-powered chatbot functionality using Google Gemini AI.
  * It handles conversation management, intent detection, and response generation.
@@ -11,7 +11,7 @@
  * - Fallback responses for error handling
  * - Analytics and performance tracking
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 
@@ -274,7 +274,7 @@ class EnhancedAIChatbotService {
    * @returns {string} Complete prompt
    */
   buildPrompt(message, context) {
-    const systemPrompt = `You are a helpful customer service assistant for Fashion Store, an e-commerce platform selling clothing and accessories. 
+    const systemPrompt = `You are a helpful customer service assistant for Fashion Forward, an e-commerce platform selling clothing and accessories. 
 
 Your role:
 - Help customers with product inquiries, orders, returns, and general questions
@@ -429,7 +429,7 @@ Assistant:`;
     // High confidence responses for common greetings
     if (['hi', 'hello', 'hey', 'hi there', 'hello there'].includes(messageLower)) {
       return {
-        answer: "Hello! I'm here to help you with your Fashion Store needs. How can I assist you today?",
+        answer: "Hello! I'm here to help you with your Fashion Forward needs. How can I assist you today?",
         confidence: 0.9,
         intent: 'greeting',
         suggestedActions: ['Browse Products', 'View Orders', 'Contact Support'],
@@ -494,7 +494,7 @@ Assistant:`;
     
     // Default response with medium confidence instead of low
     return {
-      answer: "I'm here to help you with your Fashion Store needs! I can assist with orders, products, shipping, returns, payments, and account questions. What can I help you with today?",
+      answer: "I'm here to help you with your Fashion Forward needs! I can assist with orders, products, shipping, returns, payments, and account questions. What can I help you with today?",
       confidence: 0.6,
       intent: 'general',
       suggestedActions: ['Browse Products', 'View Orders', 'Contact Support'],

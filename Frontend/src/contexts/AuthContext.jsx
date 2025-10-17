@@ -1,5 +1,5 @@
 /**
- * Authentication Context - Fashion Store E-commerce
+ * Authentication Context - Fashion Forward E-commerce
  * 
  * This context provides authentication state management for the entire application.
  * It handles user login, logout, registration, and maintains authentication state
@@ -14,7 +14,7 @@
  * - Admin role detection
  * - Persistent authentication across page reloads
  * 
- * @author Fashion Store Development Team
+ * @author Fashion Forward Development Team
  * @version 1.0.0
  */
 

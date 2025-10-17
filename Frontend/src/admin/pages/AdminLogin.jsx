@@ -134,6 +134,18 @@ const AdminLogin = () => {
               ← Back to main website
             </a>
           </div>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Admin Credentials:</h3>
+            <div className="text-xs text-blue-800 space-y-1">
+              <p><strong>Email:</strong> admin@fashionforward.com</p>
+              <p><strong>Password:</strong> Admin123!</p>
+            </div>
+            <p className="text-xs text-blue-600 mt-2">
+              Use these credentials to access the admin dashboard
+            </p>
+          </div>
         </form>
       </div>
     </div>

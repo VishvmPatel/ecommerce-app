@@ -23,7 +23,7 @@
     "payment-gateway",
     "ai-chatbot"
   ],
-  "author": "Fashion Store Development Team",
+  "author": "Fashion Forward Development Team",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
