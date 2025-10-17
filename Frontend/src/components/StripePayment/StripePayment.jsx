@@ -9,7 +9,7 @@ import {
 import apiService from '../../services/api';
 
 // Stripe publishable key - HTTP warning is normal for development
-const stripePromise = loadStripe('pk_test_51SGkakQef2ETxGAPvAjNDVy5cc30oVq99m4knlsV0vgmaDfkHOtLiV3Qz96XrNTx5cgaFkSEAVC1zngbomdMN24l00HeXDuoGX');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const CheckoutForm = ({ orderId, amount, onSuccess, onError, onCancel }) => {
   const stripe = useStripe();

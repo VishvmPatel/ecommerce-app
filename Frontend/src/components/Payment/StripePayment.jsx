@@ -11,7 +11,7 @@ import apiService from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 
 // Initialize Stripe once and memoize it
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SGkakQef2ETxGAPvAjNDVy5cc30oVq99m4knlsV0vgmaDfkHOtLiV3Qz96XrNTx5cgaFkSEAVC1zngbomdMN24l00HeXDuoGX');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const PaymentForm = ({ orderId, amount, currency, onSuccess, onError }) => {
   const stripe = useStripe();
